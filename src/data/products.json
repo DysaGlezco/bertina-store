@@ -1,0 +1,83 @@
+[
+  {
+    "id": "1",
+    "slug": "cuaderno-sage-linen",
+    "name": "Cuaderno Sage Linen",
+    "description": "Cuaderno de tapa dura forrado en lino color sage. Interior de papel crema de 90g, puntos bullet y páginas numeradas.",
+    "price": 28000,
+    "currency": "COP",
+    "images": ["/images/products/placeholder.jpg"],
+    "category": "cuadernos",
+    "tags": ["bullet journal", "lino", "tapa dura"],
+    "inStock": true,
+    "featured": true,
+    "details": [
+      "Tapa dura forrada en lino natural",
+      "160 páginas de papel crema 90g",
+      "Páginas numeradas + índice",
+      "Marcador de cinta",
+      "Bolsillo interior",
+      "Tamaño: A5 (14.8 × 21 cm)"
+    ]
+  },
+  {
+    "id": "2",
+    "slug": "libreta-blush-pocket",
+    "name": "Libreta Blush Pocket",
+    "description": "Mini libreta de bolsillo con cubierta en tono blush empolvado. Perfecta para notas rápidas y sketches.",
+    "price": 15000,
+    "currency": "COP",
+    "images": ["/images/products/placeholder.jpg"],
+    "category": "libretas",
+    "tags": ["pocket", "blush", "notas"],
+    "inStock": true,
+    "featured": true,
+    "details": [
+      "Cubierta flexible en cartón texturizado",
+      "80 páginas rayadas",
+      "Tamaño: A6 (10.5 × 14.8 cm)",
+      "Cierre con banda elástica"
+    ]
+  },
+  {
+    "id": "3",
+    "slug": "agenda-lavanda-2025",
+    "name": "Agenda Lavanda",
+    "description": "Agenda semanal undated con cubierta en lavanda suave. Espacio para metas, hábitos y reflexiones.",
+    "price": 45000,
+    "currency": "COP",
+    "images": ["/images/products/placeholder.jpg"],
+    "category": "agendas",
+    "tags": ["agenda", "lavanda", "undated", "semanal"],
+    "inStock": true,
+    "featured": true,
+    "details": [
+      "52 semanas undated (sin año fijo)",
+      "Sección de metas mensuales",
+      "Tracker de hábitos",
+      "Papel ivory 100g",
+      "Tapa dura con textura",
+      "Tamaño: B5 (17.6 × 25 cm)"
+    ]
+  },
+  {
+    "id": "4",
+    "slug": "set-papeleria-cream",
+    "name": "Set Papelería Cream",
+    "description": "Set curado de papelería básica en tono cream y warmgray. Ideal como regalo o para equipar tu escritorio.",
+    "price": 62000,
+    "currency": "COP",
+    "images": ["/images/products/placeholder.jpg"],
+    "category": "sets",
+    "tags": ["set", "regalo", "escritorio"],
+    "inStock": true,
+    "featured": false,
+    "details": [
+      "1 cuaderno A5",
+      "1 libreta pocket",
+      "Set de 3 bolígrafos de punta fina",
+      "Bloc de notas adhesivas",
+      "Presentación en caja de regalo"
+    ]
+  }
+]

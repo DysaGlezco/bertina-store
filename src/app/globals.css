@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-cormorant: "Cormorant Garamond", serif;
+    --font-dm-sans: "DM Sans", sans-serif;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-cream text-ink font-sans antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-serif;
+  }
+
+  /* Scrollbar sutil */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-cream-warm;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-warmgray-light rounded-full;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2
+           px-8 py-3 rounded-full
+           bg-ink text-cream font-sans text-sm tracking-widest uppercase
+           transition-all duration-300 ease-elegant
+           hover:bg-sage hover:text-white hover:scale-[1.02]
+           active:scale-[0.98];
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2
+           px-8 py-3 rounded-full
+           border border-ink text-ink font-sans text-sm tracking-widest uppercase
+           transition-all duration-300 ease-elegant
+           hover:bg-ink hover:text-cream hover:scale-[1.02]
+           active:scale-[0.98];
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center gap-2
+           text-sm tracking-widest uppercase font-sans
+           text-warmgray transition-colors duration-200
+           hover:text-ink;
+  }
+
+  .card-product {
+    @apply relative overflow-hidden rounded-2xl bg-white
+           transition-all duration-500 ease-elegant
+           hover:shadow-[0_20px_60px_-15px_rgba(44,40,37,0.15)];
+  }
+}
