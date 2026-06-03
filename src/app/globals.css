@@ -36,18 +36,18 @@
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2
            px-8 py-3 rounded-full
-           bg-ink text-cream font-sans text-sm tracking-widest uppercase
+           bg-gold text-white font-sans text-sm tracking-widest uppercase
            transition-all duration-300 ease-elegant
-           hover:bg-sage hover:text-white hover:scale-[1.02]
+           hover:bg-gold-dark hover:text-white hover:scale-[1.02]
            active:scale-[0.98];
   }
 
   .btn-outline {
     @apply inline-flex items-center justify-center gap-2
            px-8 py-3 rounded-full
-           border border-ink text-ink font-sans text-sm tracking-widest uppercase
+           border border-gold text-gold font-sans text-sm tracking-widest uppercase
            transition-all duration-300 ease-elegant
-           hover:bg-ink hover:text-cream hover:scale-[1.02]
+           hover:bg-gold hover:text-white hover:scale-[1.02]
            active:scale-[0.98];
   }
 
@@ -55,12 +55,12 @@
     @apply inline-flex items-center gap-2
            text-sm tracking-widest uppercase font-sans
            text-warmgray transition-colors duration-200
-           hover:text-ink;
+           hover:text-gold;
   }
 
   .card-product {
     @apply relative overflow-hidden rounded-2xl bg-white
            transition-all duration-500 ease-elegant
-           hover:shadow-[0_20px_60px_-15px_rgba(44,40,37,0.15)];
+           hover:shadow-[0_20px_60px_-15px_rgba(74,56,40,0.15)];
   }
 }

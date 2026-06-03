@@ -1,0 +1,19 @@
+{
+  "types": [
+    { "id": "planner-diario",  "label": "Planner diario",     "group": "Organización",     "priceModifier": 0, "visible": true },
+    { "id": "agenda-anual",    "label": "Agenda anual",        "group": "Organización",     "priceModifier": 0, "visible": true },
+    { "id": "productividad",   "label": "Productividad",       "group": "Organización",     "priceModifier": 0, "visible": true },
+    { "id": "bullet-journal",  "label": "Bullet Journal",      "group": "Organización",     "priceModifier": 0, "visible": true },
+    { "id": "journal",         "label": "Journal",             "group": "Reflexión",        "priceModifier": 0, "visible": true },
+    { "id": "gratitud",        "label": "Gratitud",            "group": "Reflexión",        "priceModifier": 0, "visible": true },
+    { "id": "manifestacion",   "label": "Manifestación",       "group": "Reflexión",        "priceModifier": 0, "visible": true },
+    { "id": "finanzas",        "label": "Finanzas",            "group": "Finanzas & Salud", "priceModifier": 0, "visible": true },
+    { "id": "nutricion",       "label": "Nutrición",           "group": "Finanzas & Salud", "priceModifier": 0, "visible": true },
+    { "id": "fitness",         "label": "Fitness",             "group": "Finanzas & Salud", "priceModifier": 0, "visible": true },
+    { "id": "embarazo",        "label": "Embarazo",            "group": "Momentos",         "priceModifier": 0, "visible": true },
+    { "id": "viaje",           "label": "Diario de viaje",     "group": "Momentos",         "priceModifier": 0, "visible": true },
+    { "id": "lectura",         "label": "Diario de lectura",   "group": "Hobbies",          "priceModifier": 0, "visible": true },
+    { "id": "recetas",         "label": "Recetas",             "group": "Hobbies",          "priceModifier": 0, "visible": true }
+  ],
+  "updatedAt": "2026-05-31"
+}

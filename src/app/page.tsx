@@ -1,35 +1,51 @@
 import Link from "next/link";
-import ProductCard from "@/components/product/ProductCard";
-import productsData from "@/data/products.json";
-import type { Product } from "@/types";
+import CoverCard from "@/components/product/CoverCard";
+import testimonialsData from "@/data/testimonials.json";
+import type { Testimonial } from "@/types";
 import HeroSection from "@/components/layout/HeroSection";
+import TestimonialsSection from "@/components/home/TestimonialsSection";
+import { getCovers, getTestimonials } from "@/lib/supabase";
 
-const products = productsData as Product[];
-const featured = products.filter((p) => p.featured);
+export const revalidate = 3600;
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [covers, dbTestimonials] = await Promise.all([
+    getCovers(),
+    getTestimonials(),
+  ]);
+
+  const testimonials: Testimonial[] =
+    dbTestimonials.length > 0 ? dbTestimonials : (testimonialsData as Testimonial[]);
+
+  const featured = covers.slice(0, 4);
+
   return (
     <>
       <HeroSection />
 
-      {/* Sección de productos destacados */}
+      {/* Portadas destacadas */}
       <section className="max-w-7xl mx-auto px-6 lg:px-12 py-section">
-        {/* Encabezado sección */}
         <div className="text-center mb-14 space-y-3">
           <p className="font-sans text-xs tracking-[0.3em] uppercase text-warmgray">
-            Selección
+            Colección
           </p>
           <h2 className="font-serif text-display-md text-ink">
-            Piezas destacadas
+            Elige tu portada
           </h2>
           <div className="w-12 h-px bg-sage mx-auto mt-4" />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {featured.map((product, i) => (
-            <ProductCard key={product.id} product={product} index={i} />
-          ))}
-        </div>
+        {featured.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
+            {featured.map((cover, i) => (
+              <CoverCard key={cover.id} cover={cover} index={i} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-center font-serif text-lg italic text-warmgray py-12">
+            Próximamente nuevas portadas.
+          </p>
+        )}
 
         <div className="text-center mt-14">
           <Link href="/catalogo" className="btn-outline">
@@ -37,6 +53,8 @@ export default function HomePage() {
           </Link>
         </div>
       </section>
+
+      <TestimonialsSection testimonials={testimonials} />
 
       {/* Franja valores */}
       <section className="bg-cream-warm border-y border-cream-deep py-14">

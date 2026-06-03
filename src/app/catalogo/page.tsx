@@ -1,80 +1,71 @@
-import ProductCard from "@/components/product/ProductCard";
-import productsData from "@/data/products.json";
-import type { Product, ProductCategory } from "@/types";
+import CoverCard from "@/components/product/CoverCard";
+import TestimonialsSection from "@/components/home/TestimonialsSection";
+import Breadcrumb from "@/components/ui/Breadcrumb";
+import testimonialsData from "@/data/testimonials.json";
+import type { Testimonial } from "@/types";
 import type { Metadata } from "next";
+import { getCovers } from "@/lib/supabase";
+
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Catálogo",
-  description: "Explora todos nuestros cuadernos y papelería de diseño.",
+  description: "Elige tu portada y personaliza tu cuaderno. Cuadernos de diseño hechos a mano.",
 };
 
-const products = productsData as Product[];
+const testimonials = testimonialsData as Testimonial[];
 
-const categories: { value: ProductCategory | "todos"; label: string }[] = [
-  { value: "todos", label: "Todos" },
-  { value: "cuadernos", label: "Cuadernos" },
-  { value: "libretas", label: "Libretas" },
-  { value: "agendas", label: "Agendas" },
-  { value: "sets", label: "Sets regalo" },
-];
-
-interface CatalogoPageProps {
-  searchParams: Promise<{ category?: string }>;
-}
-
-export default async function CatalogoPage({ searchParams }: CatalogoPageProps) {
-  const params = await searchParams;
-  const activeCategory = params.category ?? "todos";
-
-  const filtered =
-    activeCategory === "todos"
-      ? products
-      : products.filter((p) => p.category === activeCategory);
+export default async function CatalogoPage() {
+  const covers = await getCovers();
 
   return (
-    <div className="min-h-screen pt-28 pb-section">
-      <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        {/* Encabezado */}
-        <div className="mb-12 space-y-3">
-          <p className="font-sans text-xs tracking-[0.3em] uppercase text-warmgray">
-            Todos los productos
-          </p>
-          <h1 className="font-serif text-display-lg text-ink">Catálogo</h1>
-          <div className="w-12 h-px bg-sage mt-4" />
-        </div>
+    <main>
+      <div className="min-h-screen pt-28 pb-section">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
 
-        {/* Filtros de categoría */}
-        <div className="flex flex-wrap gap-3 mb-12">
-          {categories.map((cat) => (
-            <a
-              key={cat.value}
-              href={cat.value === "todos" ? "/catalogo" : `/catalogo?category=${cat.value}`}
-              className={`px-5 py-2 rounded-full font-sans text-xs tracking-widest uppercase transition-all duration-300 ${
-                activeCategory === cat.value
-                  ? "bg-ink text-cream"
-                  : "border border-cream-deep text-warmgray hover:border-ink hover:text-ink"
-              }`}
-            >
-              {cat.label}
-            </a>
-          ))}
-        </div>
-
-        {/* Grid */}
-        {filtered.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {filtered.map((product, i) => (
-              <ProductCard key={product.id} product={product} index={i} />
-            ))}
+          <div className="mb-8">
+            <Breadcrumb crumbs={[{ label: "Inicio", href: "/" }, { label: "Catálogo" }]} />
           </div>
-        ) : (
-          <div className="text-center py-24">
-            <p className="font-serif text-xl italic text-warmgray">
-              No hay productos en esta categoría aún.
+
+          <div className="mb-12 space-y-3">
+            <p className="font-sans text-xs tracking-[0.3em] uppercase text-warmgray">
+              Elige tu portada
+            </p>
+            <h1 className="font-serif text-display-lg text-ink">Catálogo</h1>
+            <div className="w-12 h-px bg-sage mt-4" />
+          </div>
+
+          <div className="mb-10 flex items-center gap-3 px-6 py-4 rounded-sm border border-gold/20 bg-cream-warm">
+            <div className="w-8 h-8 rounded-full bg-gold/10 flex items-center justify-center shrink-0">
+              <span className="text-gold text-sm">✦</span>
+            </div>
+            <p className="font-sans text-sm text-warmgray">
+              Elige la portada que más te guste.{" "}
+              <span className="text-ink font-medium">Luego personalizas el interior a tu medida.</span>
             </p>
           </div>
-        )}
+
+          {covers.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
+              {covers.map((cover, i) => (
+                <CoverCard
+                  key={cover.id}
+                  cover={cover}
+                  index={i}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-24">
+              <p className="font-serif text-xl italic text-warmgray">
+                Próximamente nuevas portadas.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+
+      <TestimonialsSection testimonials={testimonials} />
+    </main>
   );
 }

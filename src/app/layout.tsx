@@ -22,15 +22,99 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://bertinastore.com"),
   title: {
-    default: "Bertina Store — Papelería de autor",
+    default: "Bertina Store — Papelería de diseño y cuadernos artesanales",
     template: "%s | Bertina Store",
   },
-  description: "Cuadernos y papelería de diseño. Piezas únicas para quienes aman escribir con estilo.",
+  description:
+    "Cuadernos, agendas y papelería de diseño artesanal. Piezas únicas para quienes aman escribir con estilo. Pedidos por WhatsApp.",
+  keywords: [
+    "cuadernos artesanales",
+    "papelería de diseño",
+    "cuadernos personalizados",
+    "bullet journal",
+    "agendas elegantes",
+    "papelería para regalos",
+    "cuadernos para escribir",
+    "papelería minimalista",
+    "cuadernos cuba",
+    "tienda papelería online",
+    "cuadernos handmade",
+    "stickers papelería",
+    "papelería corporativa",
+    "cuadernos encuadernados",
+  ],
+  authors: [{ name: "Bertina Store" }],
+  creator: "Bertina Store",
   openGraph: {
-    title: "Bertina Store",
-    description: "Cuadernos y papelería de diseño.",
     type: "website",
+    locale: "es_ES",
+    url: "https://bertinastore.com",
+    siteName: "Bertina Store",
+    title: "Bertina Store — Papelería de diseño y cuadernos artesanales",
+    description:
+      "Cuadernos, agendas y papelería de diseño artesanal. Piezas únicas para quienes aman escribir con estilo.",
+    images: [
+      {
+        url: "/hero.png",
+        width: 600,
+        height: 750,
+        alt: "Bertina Store — Papelería de diseño",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Bertina Store — Papelería de diseño",
+    description: "Cuadernos y papelería artesanal para quienes aman escribir con estilo.",
+    images: ["/hero.png"],
+  },
+  icons: {
+    icon: "/logo.svg",
+    apple: "/logo.svg",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  alternates: {
+    canonical: "https://bertinastore.com",
+  },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Store",
+  name: "Bertina Store",
+  description:
+    "Cuadernos y papelería de diseño artesanal. Piezas únicas para quienes aman escribir con estilo.",
+  url: "https://bertinastore.com",
+  telephone: "+5358732088",
+  contactPoint: {
+    "@type": "ContactPoint",
+    telephone: "+5358732088",
+    contactType: "customer service",
+    availableLanguage: "Spanish",
+  },
+  sameAs: [
+    "https://instagram.com/bertina.store",
+    "https://www.facebook.com/share/1BM23f6SiV/?mibextid=wwXIfr",
+  ],
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Catálogo Bertina Store",
+    itemListElement: [
+      { "@type": "Offer", itemOffered: { "@type": "Product", name: "Cuadernos artesanales" } },
+      { "@type": "Offer", itemOffered: { "@type": "Product", name: "Papelería de diseño" } },
+      { "@type": "Offer", itemOffered: { "@type": "Product", name: "Sets de regalo" } },
+    ],
   },
 };
 
@@ -41,6 +125,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className={`${cormorant.variable} ${dmSans.variable}`}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body>
         <CartProvider>
           <Header />

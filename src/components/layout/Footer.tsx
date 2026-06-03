@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
+import { Instagram, Facebook } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -6,10 +8,18 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-6 lg:px-12 py-16 grid grid-cols-1 md:grid-cols-3 gap-10">
         {/* Marca */}
         <div className="space-y-3">
-          <p className="font-serif text-2xl font-light tracking-[0.15em] text-ink">Bertina</p>
+          <Image src="/logo-text.svg" alt="Bertina" width={160} height={60} />
           <p className="font-sans text-sm text-warmgray leading-relaxed max-w-xs">
             Cuadernos y papelería de diseño. Piezas para quienes aman escribir con estilo.
           </p>
+          <div className="flex items-center gap-4 pt-1">
+            <a href="https://instagram.com/bertina.store" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-warmgray hover:text-gold transition-colors duration-200">
+              <Instagram size={16} strokeWidth={1.5} />
+            </a>
+            <a href="https://www.facebook.com/share/1BM23f6SiV/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="text-warmgray hover:text-gold transition-colors duration-200">
+              <Facebook size={16} strokeWidth={1.5} />
+            </a>
+          </div>
         </div>
 
         {/* Links */}
@@ -19,8 +29,9 @@ export default function Footer() {
             {[
               { label: "Catálogo", href: "/catalogo" },
               { label: "Cuadernos", href: "/catalogo?category=cuadernos" },
-              { label: "Libretas", href: "/catalogo?category=libretas" },
-              { label: "Sets regalo", href: "/catalogo?category=sets" },
+              { label: "Colecciones", href: "/catalogo?category=colecciones" },
+              { label: "Celebraciones", href: "/catalogo?category=celebraciones" },
+              { label: "Regalos", href: "/catalogo?category=regalos" },
             ].map((l) => (
               <li key={l.href}>
                 <Link
@@ -41,7 +52,7 @@ export default function Footer() {
             ¿Tienes preguntas? Escríbenos directamente por WhatsApp.
           </p>
           <a
-            href="https://wa.me/573001234567"
+            href="https://wa.me/5358732088"
             target="_blank"
             rel="noopener noreferrer"
             className="btn-ghost text-xs"

@@ -1,0 +1,30 @@
+[
+  {
+    "id": "t1",
+    "name": "María F.",
+    "location": "Bogotá",
+    "text": "Nunca pensé que un cuaderno me haría querer escribir todos los días. La calidad es increíble y el diseño es exactamente lo que buscaba.",
+    "product": "Cuaderno Sage Linen"
+  },
+  {
+    "id": "t2",
+    "name": "Valentina R.",
+    "location": "Medellín",
+    "text": "Recibí mi agenda como regalo y no quiero usar ninguna otra. El papel es suave, el diseño elegante y el proceso de compra por WhatsApp fue muy fácil.",
+    "product": "Agenda Lavanda"
+  },
+  {
+    "id": "t3",
+    "name": "Sofía M.",
+    "location": "Cali",
+    "text": "Bertina entiende que escribir es un ritual. Cada detalle del cuaderno está pensado para que el momento de sentarse a escribir sea especial.",
+    "product": "Libreta Blush Pocket"
+  },
+  {
+    "id": "t4",
+    "name": "Daniela C.",
+    "location": "Cartagena",
+    "text": "El set de regalo fue el detalle perfecto para mi mejor amiga. Lo empacaron con tanto cuidado que parecía de una tienda de lujo.",
+    "product": "Set Papelería Cream"
+  }
+]

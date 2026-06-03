@@ -10,9 +10,9 @@ const config: Config = {
     extend: {
       colors: {
         sage: {
-          DEFAULT: "#A8B5A2",
-          light: "#C4CDBE",
-          dark: "#7A8C74",
+          DEFAULT: "#96B591",
+          light: "#B8CEB3",
+          dark: "#6A9664",
         },
         blush: {
           DEFAULT: "#D4A5A5",
@@ -30,11 +30,16 @@ const config: Config = {
           deep: "#E0D9CE",
         },
         warmgray: {
-          DEFAULT: "#9A9189",
-          light: "#C4BDB7",
+          DEFAULT: "#7D756E",
+          light: "#A8A19B",
           dark: "#6B625B",
         },
-        ink: "#2C2825",
+        ink: "#4A3828",
+        gold: {
+          DEFAULT: "#C89540",
+          light: "#DDB96A",
+          dark: "#A67A2E",
+        },
       },
       fontFamily: {
         serif: ["var(--font-cormorant)", "Georgia", "serif"],

@@ -1,0 +1,15 @@
+{
+  "precios": [
+    { "tipo": "semidura", "hojas": 40,  "encuadernado": "flejes",  "brillante": 2.19, "mate": 2.30, "holografico": 2.01 },
+    { "tipo": "dura",     "hojas": 80,  "encuadernado": "flejes",  "brillante": 4.94, "mate": 4.58, "holografico": 5.14 },
+    { "tipo": "dura",     "hojas": 90,  "encuadernado": "flejes",  "brillante": 5.09, "mate": 4.72, "holografico": 5.29 },
+    { "tipo": "dura",     "hojas": 100, "encuadernado": "flejes",  "brillante": 5.24, "mate": 4.87, "holografico": 5.44 },
+    { "tipo": "dura",     "hojas": 150, "encuadernado": "flejes",  "brillante": 5.97, "mate": 5.61, "holografico": 6.18 },
+    { "tipo": "dura",     "hojas": 180, "encuadernado": "flejes",  "brillante": 6.42, "mate": 6.05, "holografico": 6.62 },
+    { "tipo": "dura",     "hojas": 210, "encuadernado": "flejes",  "brillante": 6.86, "mate": 6.49, "holografico": 7.06 },
+    { "tipo": "dura",     "hojas": 150, "encuadernado": "argollas","brillante": 5.92, "mate": 5.55, "holografico": 6.12 },
+    { "tipo": "dura",     "hojas": 180, "encuadernado": "argollas","brillante": 6.36, "mate": 5.99, "holografico": 6.56 },
+    { "tipo": "dura",     "hojas": 210, "encuadernado": "argollas","brillante": 6.80, "mate": 6.44, "holografico": 7.00 }
+  ],
+  "updatedAt": "2026-05-31"
+}

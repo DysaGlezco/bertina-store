@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -40,11 +41,11 @@ export default function HeroSection() {
             initial="hidden"
             animate="visible"
             custom={0.35}
-            className="font-serif text-display-xl text-ink leading-[1.05]"
+            className="font-serif text-display-xl text-primary leading-[1.05]"
           >
             Escribe con
             <br />
-            <em className="text-sage not-italic">intención</em>
+            <em className="text-sage not-italic">propósito</em>
           </motion.h1>
 
           <motion.p
@@ -63,13 +64,13 @@ export default function HeroSection() {
             initial="hidden"
             animate="visible"
             custom={0.65}
-            className="flex items-center gap-5"
+            className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5"
           >
-            <Link href="/catalogo" className="btn-primary">
+            <Link href="/catalogo" className="btn-primary whitespace-nowrap">
               Explorar catálogo
             </Link>
             <a
-              href="https://wa.me/573001234567"
+              href="https://wa.me/5358732088"
               target="_blank"
               rel="noopener noreferrer"
               className="btn-ghost"
@@ -87,12 +88,14 @@ export default function HeroSection() {
           className="relative"
         >
           <div className="aspect-[4/5] rounded-3xl overflow-hidden bg-cream-deep">
-            {/* Placeholder — reemplaza con tu imagen real */}
-            <div className="w-full h-full flex items-center justify-center">
-              <p className="font-serif text-2xl italic text-warmgray-light text-center px-8">
-                Tu foto de producto<br />aquí
-              </p>
-            </div>
+            <Image
+              src="/hero.png"
+              alt="Mujer escribiendo en cuaderno Bertina"
+              width={600}
+              height={750}
+              className="w-full h-full object-cover"
+              priority
+            />
           </div>
 
           {/* Badge flotante */}
@@ -100,7 +103,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.9 }}
-            className="absolute -bottom-5 -left-5 bg-white rounded-2xl shadow-[0_8px_30px_rgba(44,40,37,0.12)] p-5 max-w-[180px]"
+            className="absolute -bottom-5 -left-5 bg-white rounded-2xl shadow-[0_8px_30px_rgba(74,56,40,0.12)] p-5 max-w-[180px]"
           >
             <p className="font-serif text-sm italic text-ink leading-snug">
               "Hecho para quien ama escribir"
