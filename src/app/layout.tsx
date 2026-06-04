@@ -22,7 +22,10 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://bertinastore.vercel.app"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")
+  ),
   title: {
     default: "Bertina Store — Papelería de diseño y cuadernos artesanales",
     template: "%s | Bertina Store",
@@ -50,7 +53,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "es_ES",
-    url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://bertinastore.vercel.app",
+    url: process.env.NEXT_PUBLIC_SITE_URL ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"),
     siteName: "Bertina Store",
     title: "Bertina Store — Papelería de diseño y cuadernos artesanales",
     description:
