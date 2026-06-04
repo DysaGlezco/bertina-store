@@ -27,10 +27,14 @@ import type {
 /* ─── Etiquetas y grupos ────────────────────────────────────────────── */
 
 const CUADERNO_SUBTYPES: { id: ContentSubtype; label: string }[] = [
-  { id: "liso", label: "Liso" },
-  { id: "raya", label: "Raya" },
-  { id: "isometrico", label: "Cuadro isométrico" },
-  { id: "pentagrama", label: "Pentagrama" },
+  { id: "liso",         label: "Liso" },
+  { id: "raya",         label: "Raya" },
+  { id: "cuadro-simple", label: "Cuadro simple" },
+  { id: "isometrico",   label: "Cuadro isométrico" },
+  { id: "puntos",       label: "Puntos" },
+  { id: "pentagrama",   label: "Pentagrama" },
+  { id: "caligrafia",   label: "Caligrafía" },
+  { id: "mixta",        label: "Mixta" },
 ];
 
 // Los grupos se construyen dinámicamente desde los contentTypes recibidos como prop

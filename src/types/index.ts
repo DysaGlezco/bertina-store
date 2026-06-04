@@ -35,7 +35,7 @@ export type SheetCount = 40 | 80 | 90 | 100 | 150 | 180 | 210;
 export type ContentType = string;
 
 // Solo aplica cuando contentType === "cuaderno"
-export type ContentSubtype = "liso" | "raya" | "isometrico" | "pentagrama";
+export type ContentSubtype = "liso" | "raya" | "cuadro-simple" | "isometrico" | "puntos" | "pentagrama" | "caligrafia" | "mixta";
 
 /* ─── V2: Configuración de tipos de contenido ──────────────────────── */
 

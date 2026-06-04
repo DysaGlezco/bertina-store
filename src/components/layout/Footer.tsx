@@ -29,9 +29,6 @@ export default function Footer() {
             {[
               { label: "Catálogo", href: "/catalogo" },
               { label: "Cuadernos", href: "/catalogo?category=cuadernos" },
-              { label: "Colecciones", href: "/catalogo?category=colecciones" },
-              { label: "Celebraciones", href: "/catalogo?category=celebraciones" },
-              { label: "Regalos", href: "/catalogo?category=regalos" },
             ].map((l) => (
               <li key={l.href}>
                 <Link
