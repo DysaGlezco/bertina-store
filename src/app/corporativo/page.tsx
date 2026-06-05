@@ -45,29 +45,26 @@ export default function CorporativoPage() {
   return (
     <div className="min-h-screen bg-cream">
 
-      {/* Hero */}
-      <section className="relative pt-32 pb-24 px-6 overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-1/2 h-full bg-cream-warm" />
-          <div className="absolute bottom-0 left-10 w-64 h-64 rounded-full bg-sage/10 blur-3xl" />
-        </div>
-        <div className="relative max-w-5xl mx-auto">
+      {/* Header */}
+      <div className="pt-28 pb-12 px-6">
+        <div className="max-w-5xl mx-auto">
           <div className="mb-8">
             <Breadcrumb crumbs={[{ label: "Inicio", href: "/" }, { label: "Corporativo" }]} />
           </div>
-          <p className="font-sans text-xs tracking-[0.35em] uppercase text-gold mb-6">
-            Para empresas y marcas
-          </p>
-          <h1 className="font-serif text-display-lg text-ink leading-tight max-w-2xl">
-            Papelería que habla<br />
-            <em className="text-sage not-italic">por tu marca</em>
-          </h1>
-          <div className="w-12 h-px bg-gold mt-8 mb-8" />
-          <p className="font-sans text-base text-warmgray leading-relaxed max-w-xl">
+          <div className="space-y-3">
+            <p className="font-sans text-xs tracking-[0.3em] uppercase text-warmgray">
+              Para empresas y marcas
+            </p>
+            <h1 className="font-serif text-display-lg text-ink">
+              Papelería que habla por tu marca
+            </h1>
+            <div className="w-12 h-px bg-sage mt-4" />
+          </div>
+          <p className="font-sans text-base text-warmgray leading-relaxed max-w-xl mt-6">
             Diseñamos y producimos papelería personalizada para empresas que entienden que los detalles construyen marca.
           </p>
         </div>
-      </section>
+      </div>
 
       {/* Productos */}
       <section className="py-24 px-6 bg-white">
