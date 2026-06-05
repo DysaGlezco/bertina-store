@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { ShoppingBag } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useCart } from "@/lib/cart-context";
 import { formatUSD } from "@/lib/pricing";
 import type { TarjetasConfig, TarjetaCartItem } from "@/types";
@@ -23,25 +24,23 @@ export default function TarjetasConfigurator({ config }: Props) {
   const [cantidad, setCantidad] = useState<number>(config.cantidades[0] ?? 100);
   const [added,    setAdded]    = useState(false);
 
-  // Acabados disponibles para las caras seleccionadas
-  const acabados = useMemo(
-    () => config.precios.filter(r => r.caras === caras).map(r => r.acabado),
+  const acabadoRows = useMemo(
+    () => config.precios.filter(r => r.caras === caras),
     [config.precios, caras]
   );
 
-  // Resetear acabado si no está disponible en las nuevas caras
-  const selectedAcabado = acabados.includes(acabado) ? acabado : (acabados[0] ?? "");
+  const selectedRow = acabadoRows.find(r => r.acabado === acabado)
+    ?? acabadoRows[0];
+  const selectedAcabado = selectedRow?.acabado ?? "";
 
-  // Precio calculado
   const precio = useMemo(() => {
-    const row = config.precios.find(r => r.caras === caras && r.acabado === selectedAcabado);
-    if (!row) return 0;
-    return row.precio100 * (cantidad / 100);
-  }, [config.precios, caras, selectedAcabado, cantidad]);
+    if (!selectedRow) return 0;
+    return selectedRow.precio100 * (cantidad / 100);
+  }, [selectedRow, cantidad]);
 
   function handleCarasChange(c: "una-cara" | "dos-caras") {
     setCaras(c);
-    // El acabado se reseteará vía el useMemo de selectedAcabado
+    setAcabado(""); // se reseteará al primer acabado disponible
   }
 
   function handleAddToCart() {
@@ -103,20 +102,46 @@ export default function TarjetasConfigurator({ config }: Props) {
           <span className="text-gold mr-2">02</span>Acabado
         </p>
         <div className="flex flex-wrap gap-2">
-          {acabados.map(ac => (
+          {acabadoRows.map(row => (
             <button
-              key={ac}
-              onClick={() => setAcabado(ac)}
+              key={row.acabado}
+              onClick={() => setAcabado(row.acabado)}
               className={`px-4 py-2 rounded-full border font-sans text-sm transition-all duration-200 ${
-                selectedAcabado === ac
+                selectedAcabado === row.acabado
                   ? "border-gold bg-gold/5 text-gold"
                   : "border-cream-deep text-warmgray hover:border-warmgray/40 hover:text-ink"
               }`}
             >
-              {ac}
+              {row.acabado}
             </button>
           ))}
         </div>
+
+        {/* Imagen de referencia */}
+        <AnimatePresence mode="wait">
+          {selectedRow?.imagen && (
+            <motion.div
+              key={selectedRow.acabado}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="space-y-2 pt-2"
+            >
+              <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-cream-warm">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={selectedRow.imagen}
+                  alt={`Referencia ${selectedRow.acabado}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <p className="font-sans text-[11px] text-warmgray/60">
+                Imagen de referencia · El resultado puede variar ligeramente.
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Paso 3: Cantidad */}

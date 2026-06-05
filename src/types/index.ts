@@ -97,6 +97,7 @@ export interface TarjetaPricingRow {
   caras: "una-cara" | "dos-caras";
   acabado: string;
   precio100: number; // USD por cada 100 tarjetas
+  imagen?: string;   // URL de imagen de referencia
 }
 
 export interface TarjetasConfig {

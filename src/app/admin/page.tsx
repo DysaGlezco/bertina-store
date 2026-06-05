@@ -798,9 +798,27 @@ function TarjetasPricingTable() {
       .finally(() => setLoading(false));
   }, []);
 
+  const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
+
   function handlePrice(idx: number, value: string) {
     const num = parseFloat(value);
     setRows(prev => prev.map((r, i) => i === idx ? { ...r, precio100: isNaN(num) ? 0 : num } : r));
+  }
+
+  async function handleImageUpload(idx: number, file: File) {
+    setUploadingIdx(idx);
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+    if (res.ok) {
+      const { url } = await res.json();
+      setRows(prev => prev.map((r, i) => i === idx ? { ...r, imagen: url } : r));
+    }
+    setUploadingIdx(null);
+  }
+
+  function handleRemoveImage(idx: number) {
+    setRows(prev => prev.map((r, i) => i === idx ? { ...r, imagen: undefined } : r));
   }
 
   async function handleSave() {
@@ -832,7 +850,8 @@ function TarjetasPricingTable() {
             <tr className="border-b border-cream-deep">
               <th className="pb-3 text-left font-sans text-[10px] tracking-widest uppercase text-warmgray pr-4 whitespace-nowrap">Caras</th>
               <th className="pb-3 text-left font-sans text-[10px] tracking-widest uppercase text-warmgray pr-6">Acabado</th>
-              <th className="pb-3 text-center font-sans text-[10px] tracking-widest uppercase text-warmgray whitespace-nowrap">Precio / 100 und.</th>
+              <th className="pb-3 text-center font-sans text-[10px] tracking-widest uppercase text-warmgray px-3 whitespace-nowrap">Precio / 100 und.</th>
+              <th className="pb-3 text-center font-sans text-[10px] tracking-widest uppercase text-warmgray whitespace-nowrap">Imagen ref.</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-cream-deep/60">
@@ -848,7 +867,7 @@ function TarjetasPricingTable() {
                 <td className="py-3 pr-6">
                   <span className="font-sans text-sm text-ink">{row.acabado}</span>
                 </td>
-                <td className="py-3">
+                <td className="py-3 px-3">
                   <div className="flex items-center justify-center gap-1">
                     <span className="font-sans text-xs text-warmgray">$</span>
                     <input
@@ -857,6 +876,38 @@ function TarjetasPricingTable() {
                       onChange={e => handlePrice(idx, e.target.value)}
                       className="w-24 px-2 py-1.5 font-sans text-sm text-ink bg-white border border-cream-deep rounded-lg focus:outline-none focus:border-gold transition-colors text-right tabular-nums"
                     />
+                  </div>
+                </td>
+                <td className="py-3 pl-3">
+                  <div className="flex items-center justify-center gap-2">
+                    {row.imagen ? (
+                      <>
+                        <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-cream-warm flex-shrink-0">
+                          <img src={row.imagen} alt={row.acabado} className="w-full h-full object-cover" />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(idx)}
+                          className="text-warmgray/40 hover:text-red-400 transition-colors"
+                          title="Quitar imagen"
+                        >
+                          <X size={13} />
+                        </button>
+                      </>
+                    ) : (
+                      <label className="cursor-pointer flex items-center gap-1 font-sans text-xs text-gold hover:text-gold/70 transition-colors">
+                        {uploadingIdx === idx ? (
+                          <div className="w-4 h-4 border border-gold border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <><Upload size={13} /> Subir</>
+                        )}
+                        <input
+                          type="file" accept="image/*" className="sr-only"
+                          onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(idx, f); }}
+                          disabled={uploadingIdx !== null}
+                        />
+                      </label>
+                    )}
                   </div>
                 </td>
               </tr>
