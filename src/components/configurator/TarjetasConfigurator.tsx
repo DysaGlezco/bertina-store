@@ -160,7 +160,7 @@ export default function TarjetasConfigurator({ config }: Props) {
                   : "border-cream-deep text-warmgray hover:border-warmgray/40 hover:text-ink"
               }`}
             >
-              {c.toLocaleString()}
+              {c}
             </button>
           ))}
         </div>
@@ -171,7 +171,7 @@ export default function TarjetasConfigurator({ config }: Props) {
         <div className="space-y-1">
           <p className="font-sans text-xs tracking-widest uppercase text-warmgray">Tu pedido</p>
           <p className="font-sans text-sm text-warmgray">
-            {cantidad.toLocaleString()} tarjetas · {caras === "una-cara" ? "Una cara" : "Dos caras"} · {selectedAcabado}
+            {cantidad} tarjetas · {caras === "una-cara" ? "Una cara" : "Dos caras"} · {selectedAcabado}
           </p>
         </div>
         <div className="flex items-baseline gap-2">
