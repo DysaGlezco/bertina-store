@@ -91,11 +91,38 @@ export interface PricingConfig {
   updatedAt: string;
 }
 
+/* ─── Tarjetas de presentación ──────────────────────────────────────── */
+
+export interface TarjetaPricingRow {
+  caras: "una-cara" | "dos-caras";
+  acabado: string;
+  precio100: number; // USD por cada 100 tarjetas
+}
+
+export interface TarjetasConfig {
+  precios: TarjetaPricingRow[];
+  cantidades: number[]; // unidades disponibles: [100, 200, 500, 1000]
+  updatedAt: string;
+}
+
+export interface TarjetaCartItem {
+  type: "tarjeta";
+  caras: "una-cara" | "dos-caras";
+  acabado: string;
+  cantidad: number;  // unidades de tarjetas
+  priceUSD: number;
+  quantity: number;  // cantidad en el carrito
+}
+
 /* ─── Carrito ───────────────────────────────────────────────────────── */
 
-export type CartItem = ConfiguredItem;
+export type CartItem = ConfiguredItem | TarjetaCartItem;
+
+export function isTarjetaItem(item: CartItem): item is TarjetaCartItem {
+  return (item as TarjetaCartItem).type === "tarjeta";
+}
 
 export interface CartState {
-  items: ConfiguredItem[];
+  items: CartItem[];
   isOpen: boolean;
 }

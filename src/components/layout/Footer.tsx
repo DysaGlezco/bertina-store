@@ -65,7 +65,7 @@ export default function Footer() {
             © {new Date().getFullYear()} Bertina Store. Todos los derechos reservados.
           </p>
           <p className="font-serif text-xs italic text-warmgray-light">
-            Hecho con amor y buena papelería.
+            Diseñando con intención.
           </p>
         </div>
       </div>

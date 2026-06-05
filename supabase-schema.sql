@@ -114,7 +114,22 @@ CREATE POLICY "ct_public_read"   ON content_types_config FOR SELECT USING (true)
 CREATE POLICY "ct_admin_write"   ON content_types_config USING (auth.role() = 'service_role');
 
 
--- ── 6. STORAGE — bucket de imágenes de portadas ──────────────────────
+-- ── 6. TARJETAS DE PRESENTACIÓN ─────────────────────────────────────
+CREATE TABLE IF NOT EXISTS tarjetas_config (
+  id         int         PRIMARY KEY DEFAULT 1,
+  precios    jsonb       NOT NULL DEFAULT '[]',
+  cantidades jsonb       NOT NULL DEFAULT '[100, 200, 500, 1000]',
+  updated_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE tarjetas_config ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "tarjetas_public_read" ON tarjetas_config;
+DROP POLICY IF EXISTS "tarjetas_admin_write" ON tarjetas_config;
+CREATE POLICY "tarjetas_public_read"  ON tarjetas_config FOR SELECT USING (true);
+CREATE POLICY "tarjetas_admin_write"  ON tarjetas_config USING (auth.role() = 'service_role');
+
+
+-- ── 7. STORAGE — bucket de imágenes de portadas ──────────────────────
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('covers', 'covers', true)
 ON CONFLICT (id) DO NOTHING;

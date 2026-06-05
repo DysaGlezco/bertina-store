@@ -1,8 +1,5 @@
 import CoverCard from "@/components/product/CoverCard";
-import TestimonialsSection from "@/components/home/TestimonialsSection";
 import Breadcrumb from "@/components/ui/Breadcrumb";
-import testimonialsData from "@/data/testimonials.json";
-import type { Testimonial } from "@/types";
 import type { Metadata } from "next";
 import { getCovers } from "@/lib/supabase";
 
@@ -12,8 +9,6 @@ export const metadata: Metadata = {
   title: "Catálogo",
   description: "Elige tu portada y personaliza tu cuaderno. Cuadernos de diseño hechos a mano.",
 };
-
-const testimonials = testimonialsData as Testimonial[];
 
 export default async function CatalogoPage() {
   const covers = await getCovers();
@@ -64,8 +59,6 @@ export default async function CatalogoPage() {
           )}
         </div>
       </div>
-
-      <TestimonialsSection testimonials={testimonials} />
     </main>
   );
 }

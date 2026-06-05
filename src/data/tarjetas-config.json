@@ -1,0 +1,15 @@
+{
+  "precios": [
+    { "caras": "una-cara", "acabado": "Brillante",        "precio100": 7.97 },
+    { "caras": "una-cara", "acabado": "Mate + soft touch", "precio100": 7.81 },
+    { "caras": "una-cara", "acabado": "Holográfica",       "precio100": 8.98 },
+    { "caras": "una-cara", "acabado": "Hilo",              "precio100": 7.53 },
+    { "caras": "dos-caras", "acabado": "Brillante",        "precio100": 12.88 },
+    { "caras": "dos-caras", "acabado": "Mate",             "precio100": 11.05 },
+    { "caras": "dos-caras", "acabado": "Holográfica",      "precio100": 13.89 },
+    { "caras": "dos-caras", "acabado": "Hilo",             "precio100": 8.87  },
+    { "caras": "dos-caras", "acabado": "Foil",             "precio100": 14.12 }
+  ],
+  "cantidades": [100, 200, 500, 1000],
+  "updatedAt": "2026-01-01T00:00:00.000Z"
+}

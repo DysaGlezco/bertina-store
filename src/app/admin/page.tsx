@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { Plus, Pencil, Trash2, LogOut, X, Save, MessageSquareQuote, Image as ImageIcon, DollarSign, BookOpen, Upload } from "lucide-react";
 import pricingFallback from "@/data/pricing.json";
 import contentTypesFallback from "@/data/content-types.json";
-import type { ContentTypeConfig, PricingRow } from "@/types";
+import tarjetasFallback from "@/data/tarjetas-config.json";
+import type { ContentTypeConfig, PricingRow, TarjetaPricingRow } from "@/types";
 
 interface TestimonialRow {
   id: number;
@@ -625,9 +626,33 @@ function TestimonialsTab() {
 /* ─── Tab: Precios ──────────────────────────────────────────────────── */
 const TIPO_LABEL: Record<string, string>    = { semidura: "Semidura", dura: "Dura" };
 const BINDING_LABEL: Record<string, string> = { flejes: "Wire-O", argollas: "Argollas" };
+const CARAS_LABEL: Record<string, string>   = { "una-cara": "Una cara", "dos-caras": "Dos caras" };
 
 function PricingTab() {
-  const [rows, setRows]   = useState<PricingRow[]>([]);
+  const [product, setProduct] = useState<"cuadernos" | "tarjetas">("cuadernos");
+  return (
+    <div className="space-y-6">
+      {/* Sub-tabs */}
+      <div className="flex gap-1 bg-cream-warm border border-cream-deep rounded-xl p-1 w-fit">
+        {(["cuadernos", "tarjetas"] as const).map(p => (
+          <button
+            key={p}
+            onClick={() => setProduct(p)}
+            className={`px-5 py-2 rounded-lg font-sans text-sm transition-all duration-200 capitalize ${
+              product === p ? "bg-white text-ink shadow-sm" : "text-warmgray hover:text-ink"
+            }`}
+          >
+            {p.charAt(0).toUpperCase() + p.slice(1)}
+          </button>
+        ))}
+      </div>
+      {product === "cuadernos" ? <CuadernosPricingTable /> : <TarjetasPricingTable />}
+    </div>
+  );
+}
+
+function CuadernosPricingTable() {
+  const [rows, setRows]     = useState<PricingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [status, setStatus]   = useState<"idle" | "saving" | "ok" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
@@ -734,6 +759,111 @@ function PricingTab() {
         </table>
       </div>
 
+      <div className="flex items-center gap-4 pt-2 border-t border-cream-deep">
+        <button onClick={handleSave} disabled={status === "saving"} className="btn-primary gap-2">
+          <Save size={15} strokeWidth={1.5} />
+          {status === "saving" ? "Guardando..." : "Guardar cambios"}
+        </button>
+        {status === "ok"    && <p className="font-sans text-sm text-sage">✓ Precios actualizados</p>}
+        {status === "error" && <p className="font-sans text-sm text-red-400">{errorMsg}</p>}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Subtabla: Tarjetas ─────────────────────────────────────────────── */
+function TarjetasPricingTable() {
+  const [rows, setRows]       = useState<TarjetaPricingRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [status, setStatus]   = useState<"idle" | "saving" | "ok" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [cantidades, setCantidades] = useState<number[]>([]);
+
+  useEffect(() => {
+    fetch("/api/admin/tarjetas")
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (Array.isArray(data?.precios) && data.precios.length > 0) {
+          setRows(data.precios);
+          setCantidades(data.cantidades ?? [100, 200, 500, 1000]);
+        } else {
+          setRows((tarjetasFallback as { precios: TarjetaPricingRow[] }).precios);
+          setCantidades((tarjetasFallback as { cantidades: number[] }).cantidades);
+        }
+      })
+      .catch(() => {
+        setRows((tarjetasFallback as { precios: TarjetaPricingRow[] }).precios);
+        setCantidades((tarjetasFallback as { cantidades: number[] }).cantidades);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  function handlePrice(idx: number, value: string) {
+    const num = parseFloat(value);
+    setRows(prev => prev.map((r, i) => i === idx ? { ...r, precio100: isNaN(num) ? 0 : num } : r));
+  }
+
+  async function handleSave() {
+    setStatus("saving");
+    setErrorMsg("");
+    const res = await fetch("/api/admin/tarjetas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ precios: rows, cantidades }),
+    });
+    if (res.ok) { setStatus("ok"); setTimeout(() => setStatus("idle"), 3000); }
+    else { const d = await res.json().catch(() => ({})); setStatus("error"); setErrorMsg(d.error ?? "Error"); }
+  }
+
+  if (loading) return (
+    <div className="flex justify-center py-16">
+      <div className="w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      <p className="font-sans text-sm text-warmgray">
+        Precio por cada 100 tarjetas. El configurador calcula el total según la cantidad elegida.
+      </p>
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-cream-deep">
+              <th className="pb-3 text-left font-sans text-[10px] tracking-widest uppercase text-warmgray pr-4 whitespace-nowrap">Caras</th>
+              <th className="pb-3 text-left font-sans text-[10px] tracking-widest uppercase text-warmgray pr-6">Acabado</th>
+              <th className="pb-3 text-center font-sans text-[10px] tracking-widest uppercase text-warmgray whitespace-nowrap">Precio / 100 und.</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-cream-deep/60">
+            {rows.map((row, idx) => (
+              <tr key={`${row.caras}-${row.acabado}`}>
+                <td className="py-3 pr-4">
+                  <span className={`font-sans text-xs px-2.5 py-1 rounded-full ${
+                    row.caras === "una-cara" ? "bg-sage/10 text-sage" : "bg-cream-deep text-warmgray"
+                  }`}>
+                    {CARAS_LABEL[row.caras] ?? row.caras}
+                  </span>
+                </td>
+                <td className="py-3 pr-6">
+                  <span className="font-sans text-sm text-ink">{row.acabado}</span>
+                </td>
+                <td className="py-3">
+                  <div className="flex items-center justify-center gap-1">
+                    <span className="font-sans text-xs text-warmgray">$</span>
+                    <input
+                      type="number" step="0.01" min="0"
+                      value={row.precio100}
+                      onChange={e => handlePrice(idx, e.target.value)}
+                      className="w-24 px-2 py-1.5 font-sans text-sm text-ink bg-white border border-cream-deep rounded-lg focus:outline-none focus:border-gold transition-colors text-right tabular-nums"
+                    />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <div className="flex items-center gap-4 pt-2 border-t border-cream-deep">
         <button onClick={handleSave} disabled={status === "saving"} className="btn-primary gap-2">
           <Save size={15} strokeWidth={1.5} />

@@ -1,9 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
-import type { Testimonial, Cover, PricingConfig, ContentTypesConfig } from "@/types";
+import type { Testimonial, Cover, PricingConfig, ContentTypesConfig, TarjetasConfig } from "@/types";
 import testimonialsJson from "@/data/testimonials.json";
 import coversJson from "@/data/covers.json";
 import pricingJson from "@/data/pricing.json";
 import contentTypesJson from "@/data/content-types.json";
+import tarjetasJson from "@/data/tarjetas-config.json";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -121,6 +122,30 @@ export async function saveContentTypesConfig(config: ContentTypesConfig): Promis
   const { error } = await admin.from("content_types_config").upsert({
     id: 1,
     types: config.types,
+    updated_at: new Date().toISOString(),
+  });
+  return !error;
+}
+
+/* ─── Tarjetas de presentación ──────────────────────────────────────── */
+
+export async function getTarjetasConfig(): Promise<TarjetasConfig> {
+  const { data, error } = await supabase
+    .from("tarjetas_config")
+    .select("precios, cantidades, updated_at")
+    .eq("id", 1)
+    .single();
+
+  if (error || !data) return tarjetasJson as TarjetasConfig;
+  return { precios: data.precios, cantidades: data.cantidades, updatedAt: data.updated_at };
+}
+
+export async function saveTarjetasConfig(config: TarjetasConfig): Promise<boolean> {
+  const admin = createAdminClient();
+  const { error } = await admin.from("tarjetas_config").upsert({
+    id: 1,
+    precios: config.precios,
+    cantidades: config.cantidades,
     updated_at: new Date().toISOString(),
   });
   return !error;

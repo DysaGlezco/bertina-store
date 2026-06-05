@@ -1,10 +1,10 @@
 "use client";
 
 import { createContext, useContext, useReducer, useCallback } from "react";
-import type { ConfiguredItem } from "@/types";
+import type { CartItem } from "@/types";
 
 type CartAction =
-  | { type: "ADD_ITEM"; item: ConfiguredItem }
+  | { type: "ADD_ITEM"; item: CartItem }
   | { type: "REMOVE_ITEM"; index: number }
   | { type: "UPDATE_QUANTITY"; index: number; quantity: number }
   | { type: "CLEAR_CART" }
@@ -12,7 +12,7 @@ type CartAction =
   | { type: "CLOSE_CART" };
 
 interface CartState {
-  items: ConfiguredItem[];
+  items: CartItem[];
   isOpen: boolean;
 }
 
@@ -43,7 +43,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
 }
 
 interface CartContextValue extends CartState {
-  addItem: (item: ConfiguredItem) => void;
+  addItem: (item: CartItem) => void;
   removeItem: (index: number) => void;
   updateQuantity: (index: number, quantity: number) => void;
   clearCart: () => void;
@@ -58,7 +58,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, initialState);
 
-  const addItem        = useCallback((item: ConfiguredItem) => dispatch({ type: "ADD_ITEM", item }), []);
+  const addItem        = useCallback((item: CartItem) => dispatch({ type: "ADD_ITEM", item }), []);
   const removeItem     = useCallback((index: number) => dispatch({ type: "REMOVE_ITEM", index }), []);
   const updateQuantity = useCallback((index: number, quantity: number) => dispatch({ type: "UPDATE_QUANTITY", index, quantity }), []);
   const clearCart      = useCallback(() => dispatch({ type: "CLEAR_CART" }), []);
