@@ -115,12 +115,46 @@ export interface TarjetaCartItem {
   quantity: number;  // cantidad en el carrito
 }
 
+/* ─── Pegatinas ─────────────────────────────────────────────────────── */
+
+export type PegatinaMaterial = "papel-fotografico" | "vinilo";
+export type PegatinaTamano   = "2x2" | "3x3" | "4x4";
+
+export interface PegatinaPricingRow {
+  material: PegatinaMaterial;
+  acabado:  string;
+  precio2x2: number;
+  precio3x3: number;
+  precio4x4: number;
+  imagen?: string;
+}
+
+export interface PegatinasConfig {
+  precios:   PegatinaPricingRow[];
+  cantidad:  number; // fijo: 50
+  updatedAt: string;
+}
+
+export interface PegatinaCartItem {
+  type:     "pegatina";
+  material: string;
+  acabado:  string;
+  tamano:   PegatinaTamano;
+  cantidad: number; // 50
+  priceUSD: number;
+  quantity: number;
+}
+
 /* ─── Carrito ───────────────────────────────────────────────────────── */
 
-export type CartItem = ConfiguredItem | TarjetaCartItem;
+export type CartItem = ConfiguredItem | TarjetaCartItem | PegatinaCartItem;
 
 export function isTarjetaItem(item: CartItem): item is TarjetaCartItem {
   return (item as TarjetaCartItem).type === "tarjeta";
+}
+
+export function isPegatinaItem(item: CartItem): item is PegatinaCartItem {
+  return (item as PegatinaCartItem).type === "pegatina";
 }
 
 export interface CartState {

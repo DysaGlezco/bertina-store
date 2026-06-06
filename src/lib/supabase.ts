@@ -1,10 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
-import type { Testimonial, Cover, PricingConfig, ContentTypesConfig, TarjetasConfig } from "@/types";
+import type { Testimonial, Cover, PricingConfig, ContentTypesConfig, TarjetasConfig, PegatinasConfig } from "@/types";
 import testimonialsJson from "@/data/testimonials.json";
 import coversJson from "@/data/covers.json";
 import pricingJson from "@/data/pricing.json";
 import contentTypesJson from "@/data/content-types.json";
 import tarjetasJson from "@/data/tarjetas-config.json";
+import pegatinasJson from "@/data/pegatinas-config.json";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -146,6 +147,30 @@ export async function saveTarjetasConfig(config: TarjetasConfig): Promise<boolea
     id: 1,
     precios: config.precios,
     cantidades: config.cantidades,
+    updated_at: new Date().toISOString(),
+  });
+  return !error;
+}
+
+/* ─── Pegatinas ─────────────────────────────────────────────────────── */
+
+export async function getPegatinasConfig(): Promise<PegatinasConfig> {
+  const { data, error } = await supabase
+    .from("pegatinas_config")
+    .select("precios, cantidad, updated_at")
+    .eq("id", 1)
+    .single();
+
+  if (error || !data) return pegatinasJson as PegatinasConfig;
+  return { precios: data.precios, cantidad: data.cantidad, updatedAt: data.updated_at };
+}
+
+export async function savePegatinasConfig(config: PegatinasConfig): Promise<boolean> {
+  const admin = createAdminClient();
+  const { error } = await admin.from("pegatinas_config").upsert({
+    id: 1,
+    precios: config.precios,
+    cantidad: config.cantidad,
     updated_at: new Date().toISOString(),
   });
   return !error;

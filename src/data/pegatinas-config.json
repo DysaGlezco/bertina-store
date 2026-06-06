@@ -1,0 +1,13 @@
+{
+  "precios": [
+    { "material": "papel-fotografico", "acabado": "Normal",               "precio2x2": 1.84, "precio3x3": 2.76, "precio4x4": 3.13 },
+    { "material": "papel-fotografico", "acabado": "Laminado Brillante",   "precio2x2": 2.36, "precio3x3": 3.54, "precio4x4": 4.01 },
+    { "material": "papel-fotografico", "acabado": "Laminado Mate",        "precio2x2": 2.01, "precio3x3": 3.01, "precio4x4": 3.41 },
+    { "material": "papel-fotografico", "acabado": "Laminado Holográfico", "precio2x2": 2.55, "precio3x3": 3.83, "precio4x4": 4.34 },
+    { "material": "vinilo",            "acabado": "Normal",               "precio2x2": 1.91, "precio3x3": 2.87, "precio4x4": 3.25 },
+    { "material": "vinilo",            "acabado": "Laminado Brillante",   "precio2x2": 2.43, "precio3x3": 3.64, "precio4x4": 4.13 },
+    { "material": "vinilo",            "acabado": "Laminado Holográfico", "precio2x2": 2.62, "precio3x3": 3.93, "precio4x4": 4.46 }
+  ],
+  "cantidad": 50,
+  "updatedAt": "2026-01-01T00:00:00.000Z"
+}

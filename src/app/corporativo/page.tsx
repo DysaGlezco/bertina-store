@@ -28,9 +28,9 @@ const products = [
     icon: "◉",
     title: "Pegatinas para marcas",
     desc: "Vinilo, papel o transparente para etiquetar tus productos y paquetes. Contáctanos para una cotización personalizada.",
-    cta: "Cotizar",
-    href: "https://wa.me/5358732088?text=Hola%2C%20me%20interesan%20pegatinas%20para%20mi%20marca.",
-    whatsapp: true,
+    cta: "Configurar",
+    href: "/corporativo/pegatinas",
+    whatsapp: false,
   },
 ];
 

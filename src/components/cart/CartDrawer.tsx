@@ -1,14 +1,14 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Minus, Plus, ShoppingBag, CreditCard } from "lucide-react";
+import { X, Minus, Plus, ShoppingBag, CreditCard, Tag } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
 import { formatUSD } from "@/lib/pricing";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
-import type { CartItem, ConfiguredItem, TarjetaCartItem } from "@/types";
-import { isTarjetaItem } from "@/types";
+import type { CartItem, ConfiguredItem, TarjetaCartItem, PegatinaCartItem } from "@/types";
+import { isTarjetaItem, isPegatinaItem } from "@/types";
 
 const LAMINATION_LABEL: Record<string, string> = {
   brillante: "Brillante",
@@ -58,9 +58,28 @@ function TarjetaSummary({ item }: { item: TarjetaCartItem }) {
   );
 }
 
+const MATERIAL_LABEL: Record<string, string> = {
+  "papel-fotografico": "Papel fotográfico",
+  "vinilo": "Vinilo",
+};
+const TAMANO_LABEL: Record<string, string> = {
+  "2x2": "Pequeña 2×2", "3x3": "Mediana 3×3", "4x4": "Grande 4×4",
+};
+
+function PegatinaSummary({ item }: { item: PegatinaCartItem }) {
+  return (
+    <div className="space-y-0.5">
+      <p className="font-sans text-xs text-warmgray">{MATERIAL_LABEL[item.material] ?? item.material}</p>
+      <p className="font-sans text-xs text-warmgray">{item.acabado}</p>
+      <p className="font-sans text-xs text-warmgray">{TAMANO_LABEL[item.tamano]} · {item.cantidad} uds.</p>
+    </div>
+  );
+}
+
 function CartItemRow({ item, index }: { item: CartItem; index: number }) {
   const { removeItem, updateQuantity } = useCart();
-  const isTarjeta = isTarjetaItem(item);
+  const isTarjeta  = isTarjetaItem(item);
+  const isPegatina = isPegatinaItem(item);
 
   return (
     <motion.div
@@ -72,15 +91,12 @@ function CartItemRow({ item, index }: { item: CartItem; index: number }) {
     >
       {/* Imagen / ícono */}
       <div className="w-20 h-24 rounded-sm overflow-hidden bg-cream-warm flex-shrink-0 flex items-center justify-center">
-        {isTarjeta ? (
-          <CreditCard size={28} strokeWidth={1} className="text-warmgray/40" />
-        ) : (
+        {isTarjeta  ? <CreditCard size={28} strokeWidth={1} className="text-warmgray/40" /> :
+         isPegatina ? <Tag        size={28} strokeWidth={1} className="text-warmgray/40" /> : (
           <Image
             src={(item as ConfiguredItem).config.cover.images[0] ?? "/images/covers/placeholder.jpg"}
             alt={(item as ConfiguredItem).config.cover.name}
-            width={80}
-            height={96}
-            unoptimized
+            width={80} height={96} unoptimized
             className="w-full h-full object-cover"
           />
         )}
@@ -89,12 +105,13 @@ function CartItemRow({ item, index }: { item: CartItem; index: number }) {
       {/* Info */}
       <div className="flex-1 min-w-0">
         <p className="font-serif text-base text-ink truncate mb-1">
-          {isTarjeta ? "Tarjetas de presentación" : (item as ConfiguredItem).config.cover.name}
+          {isTarjeta  ? "Tarjetas de presentación" :
+           isPegatina ? "Pegatinas" :
+           (item as ConfiguredItem).config.cover.name}
         </p>
-        {isTarjeta
-          ? <TarjetaSummary item={item as TarjetaCartItem} />
-          : <CuadernoSummary item={item as ConfiguredItem} />
-        }
+        {isTarjeta  ? <TarjetaSummary  item={item as TarjetaCartItem}  /> :
+         isPegatina ? <PegatinaSummary item={item as PegatinaCartItem} /> :
+         <CuadernoSummary item={item as ConfiguredItem} />}
         <div className="flex items-center gap-3 mt-3">
           <button
             onClick={() => updateQuantity(index, item.quantity - 1)}

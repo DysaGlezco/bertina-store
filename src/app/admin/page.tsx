@@ -5,7 +5,8 @@ import { Plus, Pencil, Trash2, LogOut, X, Save, MessageSquareQuote, Image as Ima
 import pricingFallback from "@/data/pricing.json";
 import contentTypesFallback from "@/data/content-types.json";
 import tarjetasFallback from "@/data/tarjetas-config.json";
-import type { ContentTypeConfig, PricingRow, TarjetaPricingRow } from "@/types";
+import pegatinaseFallback from "@/data/pegatinas-config.json";
+import type { ContentTypeConfig, PricingRow, TarjetaPricingRow, PegatinaPricingRow } from "@/types";
 
 interface TestimonialRow {
   id: number;
@@ -629,12 +630,12 @@ const BINDING_LABEL: Record<string, string> = { flejes: "Wire-O", argollas: "Arg
 const CARAS_LABEL: Record<string, string>   = { "una-cara": "Una cara", "dos-caras": "Dos caras" };
 
 function PricingTab() {
-  const [product, setProduct] = useState<"cuadernos" | "tarjetas">("cuadernos");
+  const [product, setProduct] = useState<"cuadernos" | "tarjetas" | "pegatinas">("cuadernos");
   return (
     <div className="space-y-6">
       {/* Sub-tabs */}
       <div className="flex gap-1 bg-cream-warm border border-cream-deep rounded-xl p-1 w-fit">
-        {(["cuadernos", "tarjetas"] as const).map(p => (
+        {(["cuadernos", "tarjetas", "pegatinas"] as const).map(p => (
           <button
             key={p}
             onClick={() => setProduct(p)}
@@ -646,7 +647,9 @@ function PricingTab() {
           </button>
         ))}
       </div>
-      {product === "cuadernos" ? <CuadernosPricingTable /> : <TarjetasPricingTable />}
+      {product === "cuadernos"  && <CuadernosPricingTable />}
+      {product === "tarjetas"   && <TarjetasPricingTable />}
+      {product === "pegatinas"  && <PegatinasPricingTable />}
     </div>
   );
 }
@@ -903,6 +906,155 @@ function TarjetasPricingTable() {
                         )}
                         <input
                           type="file" accept="image/*" className="sr-only"
+                          onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(idx, f); }}
+                          disabled={uploadingIdx !== null}
+                        />
+                      </label>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex items-center gap-4 pt-2 border-t border-cream-deep">
+        <button onClick={handleSave} disabled={status === "saving"} className="btn-primary gap-2">
+          <Save size={15} strokeWidth={1.5} />
+          {status === "saving" ? "Guardando..." : "Guardar cambios"}
+        </button>
+        {status === "ok"    && <p className="font-sans text-sm text-sage">✓ Precios actualizados</p>}
+        {status === "error" && <p className="font-sans text-sm text-red-400">{errorMsg}</p>}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Subtabla: Pegatinas ────────────────────────────────────────────── */
+const MATERIAL_LABEL_ADM: Record<string, string> = {
+  "papel-fotografico": "Papel fotográfico",
+  "vinilo": "Vinilo",
+};
+
+function PegatinasPricingTable() {
+  const [rows, setRows]         = useState<PegatinaPricingRow[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [status, setStatus]     = useState<"idle" | "saving" | "ok" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/pegatinas")
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (Array.isArray(data?.precios) && data.precios.length > 0)
+          setRows(data.precios);
+        else
+          setRows((pegatinaseFallback as { precios: PegatinaPricingRow[] }).precios);
+      })
+      .catch(() => setRows((pegatinaseFallback as { precios: PegatinaPricingRow[] }).precios))
+      .finally(() => setLoading(false));
+  }, []);
+
+  function handlePrice(idx: number, field: "precio2x2" | "precio3x3" | "precio4x4", value: string) {
+    const num = parseFloat(value);
+    setRows(prev => prev.map((r, i) => i === idx ? { ...r, [field]: isNaN(num) ? 0 : num } : r));
+  }
+
+  async function handleImageUpload(idx: number, file: File) {
+    setUploadingIdx(idx);
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+    if (res.ok) {
+      const { url } = await res.json();
+      setRows(prev => prev.map((r, i) => i === idx ? { ...r, imagen: url } : r));
+    }
+    setUploadingIdx(null);
+  }
+
+  function handleRemoveImage(idx: number) {
+    setRows(prev => prev.map((r, i) => i === idx ? { ...r, imagen: undefined } : r));
+  }
+
+  async function handleSave() {
+    setStatus("saving");
+    const res = await fetch("/api/admin/pegatinas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ precios: rows, cantidad: 50 }),
+    });
+    if (res.ok) { setStatus("ok"); setTimeout(() => setStatus("idle"), 3000); }
+    else { const d = await res.json().catch(() => ({})); setStatus("error"); setErrorMsg(d.error ?? "Error"); }
+  }
+
+  if (loading) return (
+    <div className="flex justify-center py-16">
+      <div className="w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      <p className="font-sans text-sm text-warmgray">
+        Precio por 50 unidades según material, acabado y tamaño.
+      </p>
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-cream-deep">
+              <th className="pb-3 text-left font-sans text-[10px] tracking-widest uppercase text-warmgray pr-4">Material</th>
+              <th className="pb-3 text-left font-sans text-[10px] tracking-widest uppercase text-warmgray pr-4">Acabado</th>
+              <th className="pb-3 text-center font-sans text-[10px] tracking-widest uppercase text-warmgray px-3">2×2</th>
+              <th className="pb-3 text-center font-sans text-[10px] tracking-widest uppercase text-warmgray px-3">3×3</th>
+              <th className="pb-3 text-center font-sans text-[10px] tracking-widest uppercase text-warmgray px-3">4×4</th>
+              <th className="pb-3 text-center font-sans text-[10px] tracking-widest uppercase text-warmgray">Imagen</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-cream-deep/60">
+            {rows.map((row, idx) => (
+              <tr key={`${row.material}-${row.acabado}`}>
+                <td className="py-3 pr-4">
+                  <span className={`font-sans text-xs px-2.5 py-1 rounded-full ${
+                    row.material === "papel-fotografico" ? "bg-sage/10 text-sage" : "bg-cream-deep text-warmgray"
+                  }`}>
+                    {MATERIAL_LABEL_ADM[row.material] ?? row.material}
+                  </span>
+                </td>
+                <td className="py-3 pr-4">
+                  <span className="font-sans text-sm text-ink">{row.acabado}</span>
+                </td>
+                {(["precio2x2", "precio3x3", "precio4x4"] as const).map(field => (
+                  <td key={field} className="py-3 px-3">
+                    <div className="flex items-center justify-center gap-1">
+                      <span className="font-sans text-xs text-warmgray">$</span>
+                      <input
+                        type="number" step="0.01" min="0"
+                        value={row[field]}
+                        onChange={e => handlePrice(idx, field, e.target.value)}
+                        className="w-20 px-2 py-1.5 font-sans text-sm text-ink bg-white border border-cream-deep rounded-lg focus:outline-none focus:border-gold transition-colors text-right tabular-nums"
+                      />
+                    </div>
+                  </td>
+                ))}
+                <td className="py-3 pl-3">
+                  <div className="flex items-center justify-center gap-2">
+                    {row.imagen ? (
+                      <>
+                        <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-cream-warm flex-shrink-0">
+                          <img src={row.imagen} alt={row.acabado} className="w-full h-full object-cover" />
+                        </div>
+                        <button type="button" onClick={() => handleRemoveImage(idx)} className="text-warmgray/40 hover:text-red-400 transition-colors">
+                          <X size={13} />
+                        </button>
+                      </>
+                    ) : (
+                      <label className="cursor-pointer flex items-center gap-1 font-sans text-xs text-gold hover:text-gold/70 transition-colors">
+                        {uploadingIdx === idx
+                          ? <div className="w-4 h-4 border border-gold border-t-transparent rounded-full animate-spin" />
+                          : <><Upload size={13} /> Subir</>
+                        }
+                        <input type="file" accept="image/*" className="sr-only"
                           onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(idx, f); }}
                           disabled={uploadingIdx !== null}
                         />

@@ -1,5 +1,5 @@
-import type { CartItem, ConfiguredItem, TarjetaCartItem } from "@/types";
-import { isTarjetaItem } from "@/types";
+import type { CartItem, ConfiguredItem, TarjetaCartItem, PegatinaCartItem } from "@/types";
+import { isTarjetaItem, isPegatinaItem } from "@/types";
 import { formatUSD } from "@/lib/pricing";
 
 const WHATSAPP_NUMBER = "5358732088";
@@ -54,6 +54,29 @@ function buildCuadernoSpec(item: ConfiguredItem, i: number): string {
   return lines.join("\n");
 }
 
+const MATERIAL_LABEL: Record<string, string> = {
+  "papel-fotografico": "Papel fotográfico",
+  "vinilo":            "Vinilo",
+};
+
+const TAMANO_LABEL: Record<string, string> = {
+  "2x2": "Pequeña 2×2 cm",
+  "3x3": "Mediana 3×3 cm",
+  "4x4": "Grande 4×4 cm",
+};
+
+function buildPegatinaSpec(item: PegatinaCartItem, i: number): string {
+  return [
+    `*Pegatinas ${i + 1}*`,
+    `  Material: ${MATERIAL_LABEL[item.material] ?? item.material}`,
+    `  Acabado: ${item.acabado}`,
+    `  Tamaño: ${TAMANO_LABEL[item.tamano] ?? item.tamano}`,
+    `  Cantidad: ${item.cantidad} unidades`,
+    `  Precio: ${formatUSD(item.priceUSD)}`,
+    `  Subtotal: ${formatUSD(item.priceUSD * item.quantity)}`,
+  ].join("\n");
+}
+
 function buildTarjetaSpec(item: TarjetaCartItem, i: number): string {
   return [
     `*Tarjetas ${i + 1}*`,
@@ -72,12 +95,13 @@ export function buildWhatsAppMessage(items: CartItem[], totalUSD: number): strin
 
   let cuadernoIdx = 0;
   let tarjetaIdx  = 0;
+  let pegatinaIdx = 0;
 
-  const specs = items.map((item) =>
-    isTarjetaItem(item)
-      ? buildTarjetaSpec(item, tarjetaIdx++)
-      : buildCuadernoSpec(item as ConfiguredItem, cuadernoIdx++)
-  ).join("\n\n");
+  const specs = items.map((item) => {
+    if (isTarjetaItem(item))  return buildTarjetaSpec(item, tarjetaIdx++);
+    if (isPegatinaItem(item)) return buildPegatinaSpec(item, pegatinaIdx++);
+    return buildCuadernoSpec(item as ConfiguredItem, cuadernoIdx++);
+  }).join("\n\n");
 
   return `
 🛍️ *PEDIDO — BERTINA STORE*

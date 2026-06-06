@@ -129,7 +129,22 @@ CREATE POLICY "tarjetas_public_read"  ON tarjetas_config FOR SELECT USING (true)
 CREATE POLICY "tarjetas_admin_write"  ON tarjetas_config USING (auth.role() = 'service_role');
 
 
--- ── 7. STORAGE — bucket de imágenes de portadas ──────────────────────
+-- ── 7. PEGATINAS ─────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS pegatinas_config (
+  id         int         PRIMARY KEY DEFAULT 1,
+  precios    jsonb       NOT NULL DEFAULT '[]',
+  cantidad   int         NOT NULL DEFAULT 50,
+  updated_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE pegatinas_config ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "pegatinas_public_read" ON pegatinas_config;
+DROP POLICY IF EXISTS "pegatinas_admin_write" ON pegatinas_config;
+CREATE POLICY "pegatinas_public_read"  ON pegatinas_config FOR SELECT USING (true);
+CREATE POLICY "pegatinas_admin_write"  ON pegatinas_config USING (auth.role() = 'service_role');
+
+
+-- ── 8. STORAGE — bucket de imágenes de portadas ──────────────────────
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('covers', 'covers', true)
 ON CONFLICT (id) DO NOTHING;
