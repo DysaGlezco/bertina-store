@@ -20,7 +20,9 @@ ALTER TABLE covers ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "covers_public_read" ON covers;
 DROP POLICY IF EXISTS "covers_admin_write" ON covers;
 CREATE POLICY "covers_public_read"  ON covers FOR SELECT USING (true);
-CREATE POLICY "covers_admin_write"  ON covers USING (auth.role() = 'service_role');
+CREATE POLICY "covers_admin_write"  ON covers
+  FOR ALL USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.role() = 'authenticated');
 
 
 -- ── 2. TESTIMONIOS ───────────────────────────────────────────────────
@@ -38,7 +40,9 @@ ALTER TABLE testimonials ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "testimonials_public_read" ON testimonials;
 DROP POLICY IF EXISTS "testimonials_admin_write" ON testimonials;
 CREATE POLICY "testimonials_public_read"  ON testimonials FOR SELECT USING (true);
-CREATE POLICY "testimonials_admin_write"  ON testimonials USING (auth.role() = 'service_role');
+CREATE POLICY "testimonials_admin_write"  ON testimonials
+  FOR ALL USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.role() = 'authenticated');
 
 
 -- ── 3. PRODUCTOS (catálogo V1 legacy) ────────────────────────────────
@@ -84,7 +88,9 @@ ALTER TABLE pricing_config ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "pricing_public_read" ON pricing_config;
 DROP POLICY IF EXISTS "pricing_admin_write" ON pricing_config;
 CREATE POLICY "pricing_public_read"  ON pricing_config FOR SELECT USING (true);
-CREATE POLICY "pricing_admin_write"  ON pricing_config USING (auth.role() = 'service_role');
+CREATE POLICY "pricing_admin_write"  ON pricing_config
+  FOR ALL USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.role() = 'authenticated');
 
 INSERT INTO pricing_config (id, precios) VALUES (1, '[
   {"tipo":"semidura","hojas":40, "encuadernado":"flejes",  "brillante":2.19,"mate":2.30,"holografico":2.01},
@@ -111,7 +117,9 @@ ALTER TABLE content_types_config ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "ct_public_read"  ON content_types_config;
 DROP POLICY IF EXISTS "ct_admin_write"  ON content_types_config;
 CREATE POLICY "ct_public_read"   ON content_types_config FOR SELECT USING (true);
-CREATE POLICY "ct_admin_write"   ON content_types_config USING (auth.role() = 'service_role');
+CREATE POLICY "ct_admin_write"   ON content_types_config
+  FOR ALL USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.role() = 'authenticated');
 
 
 -- ── 6. TARJETAS DE PRESENTACIÓN ─────────────────────────────────────
@@ -126,7 +134,9 @@ ALTER TABLE tarjetas_config ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "tarjetas_public_read" ON tarjetas_config;
 DROP POLICY IF EXISTS "tarjetas_admin_write" ON tarjetas_config;
 CREATE POLICY "tarjetas_public_read"  ON tarjetas_config FOR SELECT USING (true);
-CREATE POLICY "tarjetas_admin_write"  ON tarjetas_config USING (auth.role() = 'service_role');
+CREATE POLICY "tarjetas_admin_write"  ON tarjetas_config
+  FOR ALL USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.role() = 'authenticated');
 
 
 -- ── 7. PEGATINAS ─────────────────────────────────────────────────────
@@ -141,7 +151,9 @@ ALTER TABLE pegatinas_config ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "pegatinas_public_read" ON pegatinas_config;
 DROP POLICY IF EXISTS "pegatinas_admin_write" ON pegatinas_config;
 CREATE POLICY "pegatinas_public_read"  ON pegatinas_config FOR SELECT USING (true);
-CREATE POLICY "pegatinas_admin_write"  ON pegatinas_config USING (auth.role() = 'service_role');
+CREATE POLICY "pegatinas_admin_write"  ON pegatinas_config
+  FOR ALL USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.role() = 'authenticated');
 
 
 -- ── 8. STORAGE — bucket de imágenes de portadas ──────────────────────
@@ -151,10 +163,13 @@ ON CONFLICT (id) DO NOTHING;
 
 DROP POLICY IF EXISTS "covers_storage_public_read"   ON storage.objects;
 DROP POLICY IF EXISTS "covers_storage_admin_insert"  ON storage.objects;
+DROP POLICY IF EXISTS "covers_storage_admin_update"  ON storage.objects;
 DROP POLICY IF EXISTS "covers_storage_admin_delete"  ON storage.objects;
 CREATE POLICY "covers_storage_public_read" ON storage.objects
   FOR SELECT USING (bucket_id = 'covers');
 CREATE POLICY "covers_storage_admin_insert" ON storage.objects
-  FOR INSERT WITH CHECK (bucket_id = 'covers' AND auth.role() = 'service_role');
+  FOR INSERT WITH CHECK (bucket_id = 'covers' AND auth.role() = 'authenticated');
+CREATE POLICY "covers_storage_admin_update" ON storage.objects
+  FOR UPDATE USING (bucket_id = 'covers' AND auth.role() = 'authenticated');
 CREATE POLICY "covers_storage_admin_delete" ON storage.objects
-  FOR DELETE USING (bucket_id = 'covers' AND auth.role() = 'service_role');
+  FOR DELETE USING (bucket_id = 'covers' AND auth.role() = 'authenticated');

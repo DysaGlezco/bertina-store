@@ -12,15 +12,6 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Cliente con service role para operaciones de escritura desde el servidor
-export function createAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false } }
-  );
-}
-
 /* ─── Queries ──────────────────────────────────────────────────────── */
 
 export async function getTestimonials(): Promise<Testimonial[]> {
@@ -95,16 +86,6 @@ export async function getPricingConfig(): Promise<PricingConfig> {
   return { precios: data.precios, updatedAt: data.updated_at };
 }
 
-export async function savePricingConfig(config: PricingConfig): Promise<boolean> {
-  const admin = createAdminClient();
-  const { error } = await admin.from("pricing_config").upsert({
-    id: 1,
-    precios: config.precios,
-    updated_at: new Date().toISOString(),
-  });
-  return !error;
-}
-
 /* ─── Tipos de contenido (V2) ───────────────────────────────────────── */
 
 export async function getContentTypesConfig(): Promise<ContentTypesConfig> {
@@ -116,16 +97,6 @@ export async function getContentTypesConfig(): Promise<ContentTypesConfig> {
 
   if (error || !data) return contentTypesJson as ContentTypesConfig;
   return { types: data.types, updatedAt: data.updated_at };
-}
-
-export async function saveContentTypesConfig(config: ContentTypesConfig): Promise<boolean> {
-  const admin = createAdminClient();
-  const { error } = await admin.from("content_types_config").upsert({
-    id: 1,
-    types: config.types,
-    updated_at: new Date().toISOString(),
-  });
-  return !error;
 }
 
 /* ─── Tarjetas de presentación ──────────────────────────────────────── */
@@ -141,17 +112,6 @@ export async function getTarjetasConfig(): Promise<TarjetasConfig> {
   return { precios: data.precios, cantidades: data.cantidades, updatedAt: data.updated_at };
 }
 
-export async function saveTarjetasConfig(config: TarjetasConfig): Promise<boolean> {
-  const admin = createAdminClient();
-  const { error } = await admin.from("tarjetas_config").upsert({
-    id: 1,
-    precios: config.precios,
-    cantidades: config.cantidades,
-    updated_at: new Date().toISOString(),
-  });
-  return !error;
-}
-
 /* ─── Pegatinas ─────────────────────────────────────────────────────── */
 
 export async function getPegatinasConfig(): Promise<PegatinasConfig> {
@@ -163,15 +123,4 @@ export async function getPegatinasConfig(): Promise<PegatinasConfig> {
 
   if (error || !data) return pegatinasJson as PegatinasConfig;
   return { precios: data.precios, cantidad: data.cantidad, updatedAt: data.updated_at };
-}
-
-export async function savePegatinasConfig(config: PegatinasConfig): Promise<boolean> {
-  const admin = createAdminClient();
-  const { error } = await admin.from("pegatinas_config").upsert({
-    id: 1,
-    precios: config.precios,
-    cantidad: config.cantidad,
-    updated_at: new Date().toISOString(),
-  });
-  return !error;
 }

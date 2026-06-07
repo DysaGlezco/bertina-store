@@ -1,23 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "export",
+  trailingSlash: true,
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "drive.google.com",
-      },
-      {
-        protocol: "https",
-        hostname: "lh3.googleusercontent.com",
-      },
-      {
-        protocol: "https",
-        hostname: "*.supabase.co",
-        pathname: "/storage/v1/object/public/**",
-      },
-    ],
+    unoptimized: true,
   },
+  basePath: process.env.NEXT_PUBLIC_BASE_PATH ?? "",
+  assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH ?? "",
 };
 
 export default nextConfig;

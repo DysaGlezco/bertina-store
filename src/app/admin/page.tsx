@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Plus, Pencil, Trash2, LogOut, X, Save, MessageSquareQuote, Image as ImageIcon, DollarSign, BookOpen, Upload } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 import pricingFallback from "@/data/pricing.json";
 import contentTypesFallback from "@/data/content-types.json";
 import tarjetasFallback from "@/data/tarjetas-config.json";
@@ -27,14 +28,15 @@ type Tab = "portadas" | "testimonios" | "precios" | "contenidos";
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [activeTab, setActiveTab] = useState<Tab>("portadas");
 
   /* ── Verificar sesión al cargar ── */
   useEffect(() => {
-    fetch("/api/admin/check")
-      .then((r) => { if (r.ok) setAuthed(true); })
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => { if (session) setAuthed(true); })
       .finally(() => setChecking(false));
   }, []);
 
@@ -42,18 +44,14 @@ export default function AdminPage() {
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoginError("");
-    const r = await fetch("/api/admin/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password }),
-    });
-    if (r.ok) { setAuthed(true); }
-    else { setLoginError("Contraseña incorrecta"); }
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) { setLoginError("Correo o contraseña incorrectos"); }
+    else { setAuthed(true); }
   }
 
   /* ── Logout ── */
   async function handleLogout() {
-    await fetch("/api/admin/login", { method: "DELETE" });
+    await supabase.auth.signOut();
     setAuthed(false);
   }
 
@@ -75,11 +73,19 @@ export default function AdminPage() {
         </div>
         <form onSubmit={handleLogin} className="space-y-4">
           <input
+            type="email"
+            placeholder="Correo electrónico"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            className={input}
+            required
+          />
+          <input
             type="password"
             placeholder="Contraseña"
             value={password}
             onChange={e => setPassword(e.target.value)}
-            className="w-full px-5 py-3 rounded-full border border-cream-deep bg-white font-sans text-sm text-ink placeholder:text-warmgray-light focus:outline-none focus:border-gold transition-colors"
+            className={input}
             required
           />
           {loginError && <p className="font-sans text-xs text-center text-red-400">{loginError}</p>}
@@ -131,10 +137,10 @@ export default function AdminPage() {
       </div>
 
       {/* ── Contenido por pestaña ── */}
-      {activeTab === "portadas" && <CoversTab />}
+      {activeTab === "portadas"    && <CoversTab />}
       {activeTab === "testimonios" && <TestimonialsTab />}
-      {activeTab === "precios" && <PricingTab />}
-      {activeTab === "contenidos" && <ContentTypesTab />}
+      {activeTab === "precios"     && <PricingTab />}
+      {activeTab === "contenidos"  && <ContentTypesTab />}
 
     </div>
   );
@@ -159,8 +165,11 @@ function CoversTab() {
 
   const loadCovers = useCallback(async () => {
     setLoading(true);
-    const r = await fetch("/api/covers");
-    if (r.ok) setCovers(await r.json());
+    const { data } = await supabase
+      .from("covers")
+      .select("*")
+      .order("created_at", { ascending: true });
+    if (data) setCovers(data as CoverRow[]);
     setLoading(false);
   }, []);
 
@@ -215,17 +224,17 @@ function CoversTab() {
     let finalImageUrl = imagePreview.startsWith("blob:") ? "" : imagePreview;
 
     if (imageFile) {
-      const fd = new FormData();
-      fd.append("file", imageFile);
-      const uploadRes = await fetch("/api/admin/upload", { method: "POST", body: fd });
-      if (!uploadRes.ok) {
-        const d = await uploadRes.json().catch(() => ({}));
-        setError(d.error ?? "Error al subir la imagen");
+      const ext = imageFile.name.split(".").pop()?.toLowerCase() ?? "jpg";
+      const fileName = `${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("covers")
+        .upload(fileName, imageFile, { cacheControl: "3600", upsert: false });
+      if (uploadError) {
+        setError(uploadError.message);
         setSaving(false);
         return;
       }
-      const { url } = await uploadRes.json();
-      finalImageUrl = url;
+      finalImageUrl = supabase.storage.from("covers").getPublicUrl(fileName).data.publicUrl;
     }
 
     const payload = {
@@ -236,27 +245,26 @@ function CoversTab() {
       available: form.available,
     };
 
-    const url    = editingId ? `/api/covers/${editingId}` : "/api/covers";
-    const method = editingId ? "PUT" : "POST";
-    const r = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    const { error: dbError } = editingId
+      ? await supabase.from("covers").update(payload).eq("id", editingId)
+      : await supabase.from("covers").insert(payload);
 
-    if (r.ok) {
+    if (dbError) {
+      setError(dbError.message);
+    } else {
       revokePreview(imagePreview);
       setImageFile(null);
       setImagePreview("");
       setShowForm(false);
       setEditingId(null);
       await loadCovers();
-    } else {
-      const d = await r.json();
-      setError(d.error ?? "Error al guardar");
     }
     setSaving(false);
   }
 
   async function handleDelete(id: string, name: string) {
     if (!confirm(`¿Eliminar la portada "${name}"? Esta acción no se puede deshacer.`)) return;
-    await fetch(`/api/covers/${id}`, { method: "DELETE" });
+    await supabase.from("covers").delete().eq("id", id);
     await loadCovers();
   }
 
@@ -405,8 +413,11 @@ function TestimonialsTab() {
 
   const loadTestimonials = useCallback(async () => {
     setLoading(true);
-    const r = await fetch("/api/testimonials");
-    if (r.ok) setTestimonials(await r.json());
+    const { data } = await supabase
+      .from("testimonials")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (data) setTestimonials(data as TestimonialRow[]);
     setLoading(false);
   }, []);
 
@@ -421,13 +432,7 @@ function TestimonialsTab() {
 
   function openEdit(t: TestimonialRow) {
     setEditingId(t.id);
-    setForm({
-      name: t.name,
-      location: t.location,
-      text: t.text,
-      product: t.product ?? "",
-      visible: t.visible,
-    });
+    setForm({ name: t.name, location: t.location, text: t.text, product: t.product ?? "", visible: t.visible });
     setError("");
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -446,35 +451,23 @@ function TestimonialsTab() {
       visible: form.visible,
     };
 
-    const url = editingId ? `/api/testimonials/${editingId}` : "/api/testimonials";
-    const method = editingId ? "PUT" : "POST";
+    const { error: dbError } = editingId
+      ? await supabase.from("testimonials").update(payload).eq("id", editingId)
+      : await supabase.from("testimonials").insert(payload);
 
-    const r = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (r.ok) {
-      setShowForm(false);
-      setEditingId(null);
-      await loadTestimonials();
-    } else {
-      const d = await r.json();
-      setError(d.error ?? "Error al guardar");
-    }
+    if (dbError) { setError(dbError.message); }
+    else { setShowForm(false); setEditingId(null); await loadTestimonials(); }
     setSaving(false);
   }
 
   async function handleDelete(id: number, name: string) {
     if (!confirm(`¿Eliminar el testimonio de "${name}"? Esta acción no se puede deshacer.`)) return;
-    await fetch(`/api/testimonials/${id}`, { method: "DELETE" });
+    await supabase.from("testimonials").delete().eq("id", id);
     await loadTestimonials();
   }
 
   return (
     <div className="space-y-6">
-      {/* Encabezado de sección */}
       <div className="flex items-center justify-between">
         <p className="font-sans text-xs text-warmgray">{testimonials.length} testimonios</p>
         <button onClick={openCreate} className="btn-primary gap-2">
@@ -482,86 +475,44 @@ function TestimonialsTab() {
         </button>
       </div>
 
-      {/* Formulario */}
       {showForm && (
         <div className="bg-white border border-cream-deep rounded-2xl p-8 space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="font-serif text-xl text-ink">
-              {editingId ? "Editar testimonio" : "Nuevo testimonio"}
-            </h2>
+            <h2 className="font-serif text-xl text-ink">{editingId ? "Editar testimonio" : "Nuevo testimonio"}</h2>
             <button onClick={() => setShowForm(false)} className="text-warmgray hover:text-ink transition-colors">
               <X size={20} strokeWidth={1.5} />
             </button>
           </div>
-
           <form onSubmit={handleSave} className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Nombre *">
-                <input
-                  required
-                  value={form.name}
-                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                  placeholder="María F."
-                  className={input}
-                />
+                <input required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="María F." className={input} />
               </Field>
               <Field label="Ciudad / Ubicación *">
-                <input
-                  required
-                  value={form.location}
-                  onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
-                  placeholder="Bogotá"
-                  className={input}
-                />
+                <input required value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} placeholder="La Habana" className={input} />
               </Field>
             </div>
-
             <Field label="Testimonio *">
-              <textarea
-                required
-                value={form.text}
-                onChange={e => setForm(f => ({ ...f, text: e.target.value }))}
-                rows={4}
-                placeholder="Nunca pensé que un cuaderno me haría querer escribir todos los días..."
-                className={`${input} resize-none`}
-              />
+              <textarea required value={form.text} onChange={e => setForm(f => ({ ...f, text: e.target.value }))} rows={4} placeholder="Nunca pensé que un cuaderno me haría querer escribir todos los días..." className={`${input} resize-none`} />
             </Field>
-
             <Field label="Producto mencionado (opcional)">
-              <input
-                value={form.product}
-                onChange={e => setForm(f => ({ ...f, product: e.target.value }))}
-                placeholder="Cuaderno Sage Linen"
-                className={input}
-              />
+              <input value={form.product} onChange={e => setForm(f => ({ ...f, product: e.target.value }))} placeholder="Cuaderno Sage Linen" className={input} />
             </Field>
-
             <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.visible}
-                onChange={e => setForm(f => ({ ...f, visible: e.target.checked }))}
-                className="w-4 h-4 accent-gold"
-              />
+              <input type="checkbox" checked={form.visible} onChange={e => setForm(f => ({ ...f, visible: e.target.checked }))} className="w-4 h-4 accent-gold" />
               <span className="font-sans text-sm text-warmgray">Visible en el sitio</span>
             </label>
-
             {error && <p className="font-sans text-xs text-red-400">{error}</p>}
-
             <div className="flex gap-3 pt-2">
               <button type="submit" disabled={saving} className="btn-primary gap-2">
-                <Save size={15} />
-                {saving ? "Guardando..." : editingId ? "Guardar cambios" : "Crear testimonio"}
+                <Save size={15} /> {saving ? "Guardando..." : editingId ? "Guardar cambios" : "Crear testimonio"}
               </button>
-              <button type="button" onClick={() => setShowForm(false)} className="btn-outline">
-                Cancelar
-              </button>
+              <button type="button" onClick={() => setShowForm(false)} className="btn-outline">Cancelar</button>
             </div>
           </form>
         </div>
       )}
 
-      {/* Lista */}
       {loading ? (
         <div className="flex justify-center py-20">
           <div className="w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin" />
@@ -575,44 +526,25 @@ function TestimonialsTab() {
         <div className="space-y-3">
           {testimonials.map(t => (
             <div key={t.id} className="bg-white border border-cream-deep rounded-xl px-6 py-4 flex items-start gap-4">
-              {/* Comilla decorativa */}
               <span className="font-serif text-3xl text-cream-deep leading-none select-none flex-shrink-0 mt-1">"</span>
-
-              {/* Contenido */}
               <div className="flex-1 min-w-0 space-y-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="font-sans text-sm font-medium text-ink">{t.name}</p>
                   <span className="font-sans text-xs text-warmgray">· {t.location}</span>
                   {t.product && (
-                    <span className="font-sans text-[10px] tracking-widest uppercase border border-sage/40 text-sage px-2 py-0.5 rounded-full">
-                      {t.product}
-                    </span>
+                    <span className="font-sans text-[10px] tracking-widest uppercase border border-sage/40 text-sage px-2 py-0.5 rounded-full">{t.product}</span>
                   )}
                   {!t.visible && (
-                    <span className="font-sans text-[10px] tracking-widest uppercase bg-warmgray/20 text-warmgray px-2 py-0.5 rounded-full">
-                      Oculto
-                    </span>
+                    <span className="font-sans text-[10px] tracking-widest uppercase bg-warmgray/20 text-warmgray px-2 py-0.5 rounded-full">Oculto</span>
                   )}
                 </div>
-                <p className="font-serif text-sm text-warmgray italic leading-relaxed line-clamp-2">
-                  {t.text}
-                </p>
+                <p className="font-serif text-sm text-warmgray italic leading-relaxed line-clamp-2">{t.text}</p>
               </div>
-
-              {/* Acciones */}
               <div className="flex items-center gap-2 flex-shrink-0">
-                <button
-                  onClick={() => openEdit(t)}
-                  className="text-warmgray hover:text-gold transition-colors p-1"
-                  title="Editar"
-                >
+                <button onClick={() => openEdit(t)} className="text-warmgray hover:text-gold transition-colors p-1" title="Editar">
                   <Pencil size={16} strokeWidth={1.5} />
                 </button>
-                <button
-                  onClick={() => handleDelete(t.id, t.name)}
-                  className="text-warmgray hover:text-red-400 transition-colors p-1"
-                  title="Eliminar"
-                >
+                <button onClick={() => handleDelete(t.id, t.name)} className="text-warmgray hover:text-red-400 transition-colors p-1" title="Eliminar">
                   <Trash2 size={16} strokeWidth={1.5} />
                 </button>
               </div>
@@ -633,7 +565,6 @@ function PricingTab() {
   const [product, setProduct] = useState<"cuadernos" | "tarjetas" | "pegatinas">("cuadernos");
   return (
     <div className="space-y-6">
-      {/* Sub-tabs */}
       <div className="flex gap-1 bg-cream-warm border border-cream-deep rounded-xl p-1 w-fit">
         {(["cuadernos", "tarjetas", "pegatinas"] as const).map(p => (
           <button
@@ -655,22 +586,25 @@ function PricingTab() {
 }
 
 function CuadernosPricingTable() {
-  const [rows, setRows]     = useState<PricingRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [status, setStatus]   = useState<"idle" | "saving" | "ok" | "error">("idle");
+  const [rows, setRows]         = useState<PricingRow[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [status, setStatus]     = useState<"idle" | "saving" | "ok" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
-    fetch("/api/admin/pricing")
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
+    (async () => {
+      try {
+        const { data } = await supabase.from("pricing_config").select("precios").eq("id", 1).single();
         if (Array.isArray(data?.precios) && data.precios.length > 0)
           setRows(data.precios);
         else
           setRows((pricingFallback as { precios: PricingRow[] }).precios);
-      })
-      .catch(() => setRows((pricingFallback as { precios: PricingRow[] }).precios))
-      .finally(() => setLoading(false));
+      } catch {
+        setRows((pricingFallback as { precios: PricingRow[] }).precios);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
   function handlePrice(idx: number, field: "brillante" | "mate" | "holografico", value: string) {
@@ -681,19 +615,11 @@ function CuadernosPricingTable() {
   async function handleSave() {
     setStatus("saving");
     setErrorMsg("");
-    const res = await fetch("/api/admin/pricing", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ precios: rows }),
+    const { error } = await supabase.from("pricing_config").upsert({
+      id: 1, precios: rows, updated_at: new Date().toISOString(),
     });
-    if (res.ok) {
-      setStatus("ok");
-      setTimeout(() => setStatus("idle"), 3000);
-    } else {
-      const data = await res.json().catch(() => ({}));
-      setStatus("error");
-      setErrorMsg(data.error ?? "Error desconocido");
-    }
+    if (error) { setStatus("error"); setErrorMsg(error.message); }
+    else { setStatus("ok"); setTimeout(() => setStatus("idle"), 3000); }
   }
 
   if (loading) return (
@@ -710,7 +636,6 @@ function CuadernosPricingTable() {
           Edita directamente los precios por combinación. Los cambios se aplican al guardar.
         </p>
       </div>
-
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
@@ -727,29 +652,18 @@ function CuadernosPricingTable() {
             {rows.map((row, idx) => (
               <tr key={`${row.tipo}-${row.hojas}-${row.encuadernado}`}>
                 <td className="py-3 pr-4">
-                  <span className={`font-sans text-xs px-2.5 py-1 rounded-full ${
-                    row.tipo === "semidura"
-                      ? "bg-sage/10 text-sage"
-                      : "bg-cream-deep text-warmgray"
-                  }`}>
+                  <span className={`font-sans text-xs px-2.5 py-1 rounded-full ${row.tipo === "semidura" ? "bg-sage/10 text-sage" : "bg-cream-deep text-warmgray"}`}>
                     {TIPO_LABEL[row.tipo] ?? row.tipo}
                   </span>
                 </td>
-                <td className="py-3 pr-4">
-                  <span className="font-sans text-sm font-medium text-ink">{row.hojas}</span>
-                </td>
-                <td className="py-3 pr-6">
-                  <span className="font-sans text-sm text-warmgray">{BINDING_LABEL[row.encuadernado] ?? row.encuadernado}</span>
-                </td>
+                <td className="py-3 pr-4"><span className="font-sans text-sm font-medium text-ink">{row.hojas}</span></td>
+                <td className="py-3 pr-6"><span className="font-sans text-sm text-warmgray">{BINDING_LABEL[row.encuadernado] ?? row.encuadernado}</span></td>
                 {(["brillante", "mate", "holografico"] as const).map(field => (
                   <td key={field} className="py-3 px-3">
                     <div className="flex items-center justify-center gap-1">
                       <span className="font-sans text-xs text-warmgray">$</span>
                       <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={row[field]}
+                        type="number" step="0.01" min="0" value={row[field]}
                         onChange={e => handlePrice(idx, field, e.target.value)}
                         className="w-20 px-2 py-1.5 font-sans text-sm text-ink bg-white border border-cream-deep rounded-lg focus:outline-none focus:border-gold transition-colors text-right tabular-nums"
                       />
@@ -761,7 +675,6 @@ function CuadernosPricingTable() {
           </tbody>
         </table>
       </div>
-
       <div className="flex items-center gap-4 pt-2 border-t border-cream-deep">
         <button onClick={handleSave} disabled={status === "saving"} className="btn-primary gap-2">
           <Save size={15} strokeWidth={1.5} />
@@ -775,17 +688,26 @@ function CuadernosPricingTable() {
 }
 
 /* ─── Subtabla: Tarjetas ─────────────────────────────────────────────── */
+async function uploadImage(file: File): Promise<string | null> {
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+  const fileName = `${Date.now()}.${ext}`;
+  const { error } = await supabase.storage.from("covers").upload(fileName, file, { upsert: false });
+  if (error) return null;
+  return supabase.storage.from("covers").getPublicUrl(fileName).data.publicUrl;
+}
+
 function TarjetasPricingTable() {
-  const [rows, setRows]       = useState<TarjetaPricingRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [status, setStatus]   = useState<"idle" | "saving" | "ok" | "error">("idle");
+  const [rows, setRows]         = useState<TarjetaPricingRow[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [status, setStatus]     = useState<"idle" | "saving" | "ok" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [cantidades, setCantidades] = useState<number[]>([]);
+  const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch("/api/admin/tarjetas")
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
+    (async () => {
+      try {
+        const { data } = await supabase.from("tarjetas_config").select("precios, cantidades").eq("id", 1).single();
         if (Array.isArray(data?.precios) && data.precios.length > 0) {
           setRows(data.precios);
           setCantidades(data.cantidades ?? [100, 200, 500, 1000]);
@@ -793,15 +715,14 @@ function TarjetasPricingTable() {
           setRows((tarjetasFallback as { precios: TarjetaPricingRow[] }).precios);
           setCantidades((tarjetasFallback as { cantidades: number[] }).cantidades);
         }
-      })
-      .catch(() => {
+      } catch {
         setRows((tarjetasFallback as { precios: TarjetaPricingRow[] }).precios);
         setCantidades((tarjetasFallback as { cantidades: number[] }).cantidades);
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
-
-  const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
 
   function handlePrice(idx: number, value: string) {
     const num = parseFloat(value);
@@ -810,13 +731,8 @@ function TarjetasPricingTable() {
 
   async function handleImageUpload(idx: number, file: File) {
     setUploadingIdx(idx);
-    const fd = new FormData();
-    fd.append("file", file);
-    const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-    if (res.ok) {
-      const { url } = await res.json();
-      setRows(prev => prev.map((r, i) => i === idx ? { ...r, imagen: url } : r));
-    }
+    const url = await uploadImage(file);
+    if (url) setRows(prev => prev.map((r, i) => i === idx ? { ...r, imagen: url } : r));
     setUploadingIdx(null);
   }
 
@@ -827,13 +743,11 @@ function TarjetasPricingTable() {
   async function handleSave() {
     setStatus("saving");
     setErrorMsg("");
-    const res = await fetch("/api/admin/tarjetas", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ precios: rows, cantidades }),
+    const { error } = await supabase.from("tarjetas_config").upsert({
+      id: 1, precios: rows, cantidades, updated_at: new Date().toISOString(),
     });
-    if (res.ok) { setStatus("ok"); setTimeout(() => setStatus("idle"), 3000); }
-    else { const d = await res.json().catch(() => ({})); setStatus("error"); setErrorMsg(d.error ?? "Error"); }
+    if (error) { setStatus("error"); setErrorMsg(error.message); }
+    else { setStatus("ok"); setTimeout(() => setStatus("idle"), 3000); }
   }
 
   if (loading) return (
@@ -861,21 +775,16 @@ function TarjetasPricingTable() {
             {rows.map((row, idx) => (
               <tr key={`${row.caras}-${row.acabado}`}>
                 <td className="py-3 pr-4">
-                  <span className={`font-sans text-xs px-2.5 py-1 rounded-full ${
-                    row.caras === "una-cara" ? "bg-sage/10 text-sage" : "bg-cream-deep text-warmgray"
-                  }`}>
+                  <span className={`font-sans text-xs px-2.5 py-1 rounded-full ${row.caras === "una-cara" ? "bg-sage/10 text-sage" : "bg-cream-deep text-warmgray"}`}>
                     {CARAS_LABEL[row.caras] ?? row.caras}
                   </span>
                 </td>
-                <td className="py-3 pr-6">
-                  <span className="font-sans text-sm text-ink">{row.acabado}</span>
-                </td>
+                <td className="py-3 pr-6"><span className="font-sans text-sm text-ink">{row.acabado}</span></td>
                 <td className="py-3 px-3">
                   <div className="flex items-center justify-center gap-1">
                     <span className="font-sans text-xs text-warmgray">$</span>
                     <input
-                      type="number" step="0.01" min="0"
-                      value={row.precio100}
+                      type="number" step="0.01" min="0" value={row.precio100}
                       onChange={e => handlePrice(idx, e.target.value)}
                       className="w-24 px-2 py-1.5 font-sans text-sm text-ink bg-white border border-cream-deep rounded-lg focus:outline-none focus:border-gold transition-colors text-right tabular-nums"
                     />
@@ -886,26 +795,20 @@ function TarjetasPricingTable() {
                     {row.imagen ? (
                       <>
                         <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-cream-warm flex-shrink-0">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={row.imagen} alt={row.acabado} className="w-full h-full object-cover" />
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveImage(idx)}
-                          className="text-warmgray/40 hover:text-red-400 transition-colors"
-                          title="Quitar imagen"
-                        >
+                        <button type="button" onClick={() => handleRemoveImage(idx)} className="text-warmgray/40 hover:text-red-400 transition-colors" title="Quitar imagen">
                           <X size={13} />
                         </button>
                       </>
                     ) : (
                       <label className="cursor-pointer flex items-center gap-1 font-sans text-xs text-gold hover:text-gold/70 transition-colors">
-                        {uploadingIdx === idx ? (
-                          <div className="w-4 h-4 border border-gold border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <><Upload size={13} /> Subir</>
-                        )}
-                        <input
-                          type="file" accept="image/*" className="sr-only"
+                        {uploadingIdx === idx
+                          ? <div className="w-4 h-4 border border-gold border-t-transparent rounded-full animate-spin" />
+                          : <><Upload size={13} /> Subir</>
+                        }
+                        <input type="file" accept="image/*" className="sr-only"
                           onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(idx, f); }}
                           disabled={uploadingIdx !== null}
                         />
@@ -944,16 +847,19 @@ function PegatinasPricingTable() {
   const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch("/api/admin/pegatinas")
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
+    (async () => {
+      try {
+        const { data } = await supabase.from("pegatinas_config").select("precios, cantidad").eq("id", 1).single();
         if (Array.isArray(data?.precios) && data.precios.length > 0)
           setRows(data.precios);
         else
           setRows((pegatinaseFallback as { precios: PegatinaPricingRow[] }).precios);
-      })
-      .catch(() => setRows((pegatinaseFallback as { precios: PegatinaPricingRow[] }).precios))
-      .finally(() => setLoading(false));
+      } catch {
+        setRows((pegatinaseFallback as { precios: PegatinaPricingRow[] }).precios);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
   function handlePrice(idx: number, field: "precio2x2" | "precio3x3" | "precio4x4", value: string) {
@@ -963,13 +869,8 @@ function PegatinasPricingTable() {
 
   async function handleImageUpload(idx: number, file: File) {
     setUploadingIdx(idx);
-    const fd = new FormData();
-    fd.append("file", file);
-    const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-    if (res.ok) {
-      const { url } = await res.json();
-      setRows(prev => prev.map((r, i) => i === idx ? { ...r, imagen: url } : r));
-    }
+    const url = await uploadImage(file);
+    if (url) setRows(prev => prev.map((r, i) => i === idx ? { ...r, imagen: url } : r));
     setUploadingIdx(null);
   }
 
@@ -979,13 +880,12 @@ function PegatinasPricingTable() {
 
   async function handleSave() {
     setStatus("saving");
-    const res = await fetch("/api/admin/pegatinas", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ precios: rows, cantidad: 50 }),
+    setErrorMsg("");
+    const { error } = await supabase.from("pegatinas_config").upsert({
+      id: 1, precios: rows, cantidad: 50, updated_at: new Date().toISOString(),
     });
-    if (res.ok) { setStatus("ok"); setTimeout(() => setStatus("idle"), 3000); }
-    else { const d = await res.json().catch(() => ({})); setStatus("error"); setErrorMsg(d.error ?? "Error"); }
+    if (error) { setStatus("error"); setErrorMsg(error.message); }
+    else { setStatus("ok"); setTimeout(() => setStatus("idle"), 3000); }
   }
 
   if (loading) return (
@@ -1015,22 +915,17 @@ function PegatinasPricingTable() {
             {rows.map((row, idx) => (
               <tr key={`${row.material}-${row.acabado}`}>
                 <td className="py-3 pr-4">
-                  <span className={`font-sans text-xs px-2.5 py-1 rounded-full ${
-                    row.material === "papel-fotografico" ? "bg-sage/10 text-sage" : "bg-cream-deep text-warmgray"
-                  }`}>
+                  <span className={`font-sans text-xs px-2.5 py-1 rounded-full ${row.material === "papel-fotografico" ? "bg-sage/10 text-sage" : "bg-cream-deep text-warmgray"}`}>
                     {MATERIAL_LABEL_ADM[row.material] ?? row.material}
                   </span>
                 </td>
-                <td className="py-3 pr-4">
-                  <span className="font-sans text-sm text-ink">{row.acabado}</span>
-                </td>
+                <td className="py-3 pr-4"><span className="font-sans text-sm text-ink">{row.acabado}</span></td>
                 {(["precio2x2", "precio3x3", "precio4x4"] as const).map(field => (
                   <td key={field} className="py-3 px-3">
                     <div className="flex items-center justify-center gap-1">
                       <span className="font-sans text-xs text-warmgray">$</span>
                       <input
-                        type="number" step="0.01" min="0"
-                        value={row[field]}
+                        type="number" step="0.01" min="0" value={row[field]}
                         onChange={e => handlePrice(idx, field, e.target.value)}
                         className="w-20 px-2 py-1.5 font-sans text-sm text-ink bg-white border border-cream-deep rounded-lg focus:outline-none focus:border-gold transition-colors text-right tabular-nums"
                       />
@@ -1042,6 +937,7 @@ function PegatinasPricingTable() {
                     {row.imagen ? (
                       <>
                         <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-cream-warm flex-shrink-0">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={row.imagen} alt={row.acabado} className="w-full h-full object-cover" />
                         </div>
                         <button type="button" onClick={() => handleRemoveImage(idx)} className="text-warmgray/40 hover:text-red-400 transition-colors">
@@ -1086,16 +982,20 @@ function ContentTypesTab() {
   );
   const [status, setStatus]     = useState<"idle" | "saving" | "ok" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
-
-  // Estado para formularios inline
   const [newCategoryName, setNewCategoryName] = useState("");
   const [showNewCategory, setShowNewCategory] = useState(false);
-  // { [group]: { label, modifier } } para formularios de nuevo tipo por categoría
   const [newTypeForm, setNewTypeForm] = useState<Record<string, { label: string; modifier: string }>>({});
+
+  /* ── Cargar desde Supabase al montar ── */
+  useEffect(() => {
+    supabase.from("content_types_config").select("types").eq("id", 1).single()
+      .then(({ data }) => {
+        if (Array.isArray(data?.types) && data.types.length > 0) setTypes(data.types);
+      });
+  }, []);
 
   const groups = Array.from(new Set(types.map((t) => t.group)));
 
-  /* ── Handlers ── */
   function handleModifier(id: string, value: string) {
     const num = parseFloat(value);
     setTypes((prev) => prev.map((t) => (t.id === id ? { ...t, priceModifier: isNaN(num) ? 0 : num } : t)));
@@ -1109,7 +1009,6 @@ function ContentTypesTab() {
   function handleAddCategory() {
     const name = newCategoryName.trim();
     if (!name) return;
-    // La categoría existe cuando se añade el primer tipo
     setNewTypeForm((prev) => ({ ...prev, [name]: { label: "", modifier: "0" } }));
     setNewCategoryName("");
     setShowNewCategory(false);
@@ -1118,13 +1017,10 @@ function ContentTypesTab() {
     const form = newTypeForm[group];
     if (!form?.label.trim()) return;
     const id = slugify(form.label);
-    if (types.find((t) => t.id === id)) return; // duplicado
+    if (types.find((t) => t.id === id)) return;
     const newType: ContentTypeConfig = {
-      id,
-      label: form.label.trim(),
-      group,
-      priceModifier: parseFloat(form.modifier) || 0,
-      visible: true,
+      id, label: form.label.trim(), group,
+      priceModifier: parseFloat(form.modifier) || 0, visible: true,
     };
     setTypes((prev) => [...prev, newType]);
     setNewTypeForm((prev) => ({ ...prev, [group]: { label: "", modifier: "0" } }));
@@ -1138,22 +1034,13 @@ function ContentTypesTab() {
   async function handleSave() {
     setStatus("saving");
     setErrorMsg("");
-    const res = await fetch("/api/admin/content-types", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ types, updatedAt: new Date().toISOString() }),
+    const { error } = await supabase.from("content_types_config").upsert({
+      id: 1, types, updated_at: new Date().toISOString(),
     });
-    if (res.ok) {
-      setStatus("ok");
-      setTimeout(() => setStatus("idle"), 3000);
-    } else {
-      const data = await res.json().catch(() => ({}));
-      setStatus("error");
-      setErrorMsg(data.error ?? "Error desconocido");
-    }
+    if (error) { setStatus("error"); setErrorMsg(error.message); }
+    else { setStatus("ok"); setTimeout(() => setStatus("idle"), 3000); }
   }
 
-  // Grupos visibles: los que tienen tipos + los que tienen formulario pendiente
   const allGroups = Array.from(new Set([...groups, ...Object.keys(newTypeForm)]));
 
   return (
@@ -1165,134 +1052,80 @@ function ContentTypesTab() {
             Gestiona categorías y tipos. El modificador (USD) se suma al precio base de 100 hojas + Wire-O + laminado.
           </p>
         </div>
-        <button
-          onClick={() => setShowNewCategory((s) => !s)}
-          className="btn-outline shrink-0 gap-2 text-xs"
-        >
+        <button onClick={() => setShowNewCategory((s) => !s)} className="btn-outline shrink-0 gap-2 text-xs">
           <Plus size={13} /> Nueva categoría
         </button>
       </div>
 
-      {/* Formulario nueva categoría */}
       {showNewCategory && (
         <div className="flex gap-2 items-center p-4 bg-cream-warm border border-cream-deep rounded-xl">
           <input
-            autoFocus
-            type="text"
-            placeholder="Nombre de la categoría (ej: Emprendimientos)"
-            value={newCategoryName}
-            onChange={(e) => setNewCategoryName(e.target.value)}
+            autoFocus type="text" placeholder="Nombre de la categoría (ej: Emprendimientos)"
+            value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleAddCategory()}
             className="flex-1 px-4 py-2 font-sans text-sm text-ink bg-white border border-cream-deep rounded-lg focus:outline-none focus:border-gold transition-colors"
           />
           <button onClick={handleAddCategory} className="btn-primary text-xs px-4">Crear</button>
-          <button onClick={() => setShowNewCategory(false)} className="text-warmgray hover:text-ink">
-            <X size={16} />
-          </button>
+          <button onClick={() => setShowNewCategory(false)} className="text-warmgray hover:text-ink"><X size={16} /></button>
         </div>
       )}
 
-      {/* Categorías y tipos */}
       <div className="space-y-8">
         {allGroups.map((group) => (
           <div key={group}>
-            {/* Encabezado de categoría */}
             <div className="flex items-center justify-between border-b border-cream-deep pb-2 mb-3">
               <p className="font-sans text-xs tracking-widest uppercase text-warmgray">{group}</p>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setNewTypeForm((prev) => ({
-                    ...prev,
-                    [group]: prev[group] ?? { label: "", modifier: "0" },
-                  }))}
+                  onClick={() => setNewTypeForm((prev) => ({ ...prev, [group]: prev[group] ?? { label: "", modifier: "0" } }))}
                   className="flex items-center gap-1 font-sans text-xs text-gold hover:text-gold/70 transition-colors"
                 >
                   <Plus size={12} /> Nuevo tipo
                 </button>
-                <button
-                  onClick={() => handleDeleteCategory(group)}
-                  className="text-warmgray/40 hover:text-red-400 transition-colors ml-2"
-                  title="Eliminar categoría"
-                >
+                <button onClick={() => handleDeleteCategory(group)} className="text-warmgray/40 hover:text-red-400 transition-colors ml-2" title="Eliminar categoría">
                   <Trash2 size={13} />
                 </button>
               </div>
             </div>
-
-            {/* Tipos existentes */}
             <div className="space-y-2">
               {types.filter((t) => t.group === group).map((t) => (
                 <div key={t.id} className="flex items-center gap-3 py-1.5">
-                  <input
-                    type="checkbox"
-                    checked={t.visible}
-                    onChange={(e) => handleVisible(t.id, e.target.checked)}
-                    className="accent-gold shrink-0"
-                    title="Visible en el configurador"
-                  />
+                  <input type="checkbox" checked={t.visible} onChange={(e) => handleVisible(t.id, e.target.checked)} className="accent-gold shrink-0" title="Visible en el configurador" />
                   <span className="font-sans text-sm text-ink flex-1">{t.label}</span>
                   <div className="flex items-center gap-2 shrink-0">
                     <span className="font-sans text-xs text-warmgray">+$</span>
                     <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={t.priceModifier}
+                      type="number" step="0.01" min="0" value={t.priceModifier}
                       onChange={(e) => handleModifier(t.id, e.target.value)}
                       className="w-24 px-3 py-1.5 font-sans text-sm text-ink bg-white border border-cream-deep rounded-lg focus:outline-none focus:border-gold transition-colors text-right"
                     />
                     <span className="font-sans text-xs text-warmgray">USD</span>
                   </div>
-                  <button
-                    onClick={() => handleDeleteType(t.id)}
-                    className="text-warmgray/40 hover:text-red-400 transition-colors"
-                    title="Eliminar tipo"
-                  >
+                  <button onClick={() => handleDeleteType(t.id)} className="text-warmgray/40 hover:text-red-400 transition-colors" title="Eliminar tipo">
                     <Trash2 size={13} />
                   </button>
                 </div>
               ))}
             </div>
-
-            {/* Formulario inline para nuevo tipo en esta categoría */}
             {newTypeForm[group] !== undefined && (
               <div className="mt-3 flex gap-2 items-center pl-6 p-3 bg-cream-warm border border-dashed border-cream-deep rounded-lg">
                 <input
-                  autoFocus
-                  type="text"
-                  placeholder="Nombre del tipo (ej: Manicure)"
+                  autoFocus type="text" placeholder="Nombre del tipo (ej: Manicure)"
                   value={newTypeForm[group].label}
-                  onChange={(e) => setNewTypeForm((prev) => ({
-                    ...prev,
-                    [group]: { ...prev[group], label: e.target.value },
-                  }))}
+                  onChange={(e) => setNewTypeForm((prev) => ({ ...prev, [group]: { ...prev[group], label: e.target.value } }))}
                   onKeyDown={(e) => e.key === "Enter" && handleAddType(group)}
                   className="flex-1 px-3 py-1.5 font-sans text-sm text-ink bg-white border border-cream-deep rounded-lg focus:outline-none focus:border-gold transition-colors"
                 />
                 <span className="font-sans text-xs text-warmgray shrink-0">+$</span>
                 <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
+                  type="number" step="0.01" min="0" placeholder="0.00"
                   value={newTypeForm[group].modifier}
-                  onChange={(e) => setNewTypeForm((prev) => ({
-                    ...prev,
-                    [group]: { ...prev[group], modifier: e.target.value },
-                  }))}
+                  onChange={(e) => setNewTypeForm((prev) => ({ ...prev, [group]: { ...prev[group], modifier: e.target.value } }))}
                   className="w-20 px-3 py-1.5 font-sans text-sm text-ink bg-white border border-cream-deep rounded-lg focus:outline-none focus:border-gold transition-colors text-right"
                 />
                 <span className="font-sans text-xs text-warmgray shrink-0">USD</span>
-                <button
-                  onClick={() => handleAddType(group)}
-                  className="btn-primary text-xs px-3 py-1.5 shrink-0"
-                >
-                  Añadir
-                </button>
-                <button
-                  onClick={() => setNewTypeForm((prev) => { const n = { ...prev }; delete n[group]; return n; })}
-                  className="text-warmgray hover:text-ink shrink-0"
-                >
+                <button onClick={() => handleAddType(group)} className="btn-primary text-xs px-3 py-1.5 shrink-0">Añadir</button>
+                <button onClick={() => setNewTypeForm((prev) => { const n = { ...prev }; delete n[group]; return n; })} className="text-warmgray hover:text-ink shrink-0">
                   <X size={14} />
                 </button>
               </div>
@@ -1316,7 +1149,7 @@ function ContentTypesTab() {
 /* ─── Helpers compartidos ──────────────────────────────────────────── */
 function slugify(text: string) {
   return text.toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9\s-]/g, "")
     .trim().replace(/\s+/g, "-");
 }
