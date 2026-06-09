@@ -1,21 +1,16 @@
 import Link from "next/link";
-import CoverCard from "@/components/product/CoverCard";
 import testimonialsData from "@/data/testimonials.json";
 import type { Testimonial } from "@/types";
 import HeroSection from "@/components/layout/HeroSection";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
-import { getCovers, getTestimonials } from "@/lib/supabase";
+import FeaturedCovers from "@/components/home/FeaturedCovers";
+import { getTestimonials } from "@/lib/supabase";
 
 export default async function HomePage() {
-  const [covers, dbTestimonials] = await Promise.all([
-    getCovers(),
-    getTestimonials(),
-  ]);
+  const dbTestimonials = await getTestimonials();
 
   const testimonials: Testimonial[] =
     dbTestimonials.length > 0 ? dbTestimonials : (testimonialsData as Testimonial[]);
-
-  const featured = covers.slice(0, 4);
 
   return (
     <>
@@ -33,17 +28,7 @@ export default async function HomePage() {
           <div className="w-12 h-px bg-sage mx-auto mt-4" />
         </div>
 
-        {featured.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
-            {featured.map((cover, i) => (
-              <CoverCard key={cover.id} cover={cover} index={i} />
-            ))}
-          </div>
-        ) : (
-          <p className="text-center font-serif text-lg italic text-warmgray py-12">
-            Próximamente nuevas portadas.
-          </p>
-        )}
+        <FeaturedCovers />
 
         <div className="text-center mt-14">
           <Link href="/catalogo" className="btn-outline">

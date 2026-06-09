@@ -1,0 +1,33 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { getCovers } from "@/lib/supabase";
+import type { Cover } from "@/types";
+import coversJson from "@/data/covers.json";
+import CoverCard from "@/components/product/CoverCard";
+
+export default function FeaturedCovers() {
+  const [covers, setCovers] = useState<Cover[]>(
+    (coversJson as Cover[]).slice(0, 4)
+  );
+
+  useEffect(() => {
+    getCovers().then((data) => setCovers(data.slice(0, 4)));
+  }, []);
+
+  if (covers.length === 0) {
+    return (
+      <p className="text-center font-serif text-lg italic text-warmgray py-12">
+        Próximamente nuevas portadas.
+      </p>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
+      {covers.map((cover, i) => (
+        <CoverCard key={cover.id} cover={cover} index={i} />
+      ))}
+    </div>
+  );
+}
