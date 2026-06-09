@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ShoppingBag, Tag } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCart } from "@/lib/cart-context";
 import { formatUSD } from "@/lib/pricing";
+import { getPegatinasConfig } from "@/lib/supabase";
 import type { PegatinasConfig, PegatinaMaterial, PegatinaTamano, PegatinaCartItem } from "@/types";
 import { MATERIAL_LABEL } from "@/lib/constants";
-
-interface Props { config: PegatinasConfig; }
+import pegatinasFallback from "@/data/pegatinas-config.json";
 
 const MATERIAL_OPTIONS: { id: PegatinaMaterial; label: string; desc: string }[] = [
   { id: "papel-fotografico", label: "Papel fotográfico", desc: "Alta resolución, colores vivos" },
@@ -21,8 +21,14 @@ const TAMANO_OPTIONS: { id: PegatinaTamano; label: string; dims: string }[] = [
   { id: "4x4", label: "Grande",  dims: "4 × 4 cm" },
 ];
 
-export default function PegatinasConfigurator({ config }: Props) {
+export default function PegatinasConfigurator() {
   const { addItem } = useCart();
+
+  const [config, setConfig] = useState<PegatinasConfig>(pegatinasFallback as PegatinasConfig);
+
+  useEffect(() => {
+    getPegatinasConfig().then(setConfig);
+  }, []);
 
   const [material, setMaterial] = useState<PegatinaMaterial>("papel-fotografico");
   const [acabado,  setAcabado]  = useState<string>("");
