@@ -10,9 +10,9 @@ import { WHATSAPP_NUMBER } from "@/lib/constants";
 
 const NAV_LINKS = [
   { label: "Catálogo", href: "/catalogo" },
-  { label: "Nosotros", href: "/nosotros" },
   { label: "Corporativo", href: "/corporativo" },
-  { label: "Contáctenos", href: "/contacto" },
+  { label: "Contacto", href: "/contacto" },
+  { label: "Nosotros", href: "/nosotros" },
 ];
 
 const SOCIAL_LINKS = [
