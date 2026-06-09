@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS covers (
   created_at  timestamptz DEFAULT now()
 );
 ALTER TABLE covers ADD COLUMN IF NOT EXISTS description text;
+ALTER TABLE covers ADD COLUMN IF NOT EXISTS featured boolean DEFAULT false;
 
 ALTER TABLE covers ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "covers_public_read" ON covers;

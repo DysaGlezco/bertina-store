@@ -1,18 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getCovers } from "@/lib/supabase";
+import { getFeaturedCovers } from "@/lib/supabase";
 import type { Cover } from "@/types";
 import coversJson from "@/data/covers.json";
 import CoverCard from "@/components/product/CoverCard";
 
 export default function FeaturedCovers() {
   const [covers, setCovers] = useState<Cover[]>(
-    (coversJson as Cover[]).slice(0, 4)
+    (coversJson as Cover[]).filter(c => c.featured)
   );
 
   useEffect(() => {
-    getCovers().then((data) => setCovers(data.slice(0, 4)));
+    getFeaturedCovers().then(setCovers);
   }, []);
 
   if (covers.length === 0) {

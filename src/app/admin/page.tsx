@@ -151,7 +151,7 @@ export default function AdminPage() {
 /* ══════════════════════════════════════════════════════════════════════ */
 /*  TAB: PORTADAS                                                          */
 /* ══════════════════════════════════════════════════════════════════════ */
-const EMPTY_COVER = { name: "", slug: "", description: "", available: true };
+const EMPTY_COVER = { name: "", slug: "", description: "", available: true, featured: false };
 
 function CoversTab() {
   const [covers, setCovers]             = useState<Cover[]>([]);
@@ -200,7 +200,7 @@ function CoversTab() {
 
   function openEdit(c: Cover) {
     setEditingId(c.id);
-    setForm({ name: c.name, slug: c.slug, description: c.description ?? "", available: c.available });
+    setForm({ name: c.name, slug: c.slug, description: c.description ?? "", available: c.available, featured: c.featured });
     revokePreview(imagePreview);
     setImageFile(null);
     setImagePreview(c.images[0] ?? "");
@@ -240,6 +240,7 @@ function CoversTab() {
       description: form.description.trim() || null,
       images: finalImageUrl ? [finalImageUrl] : [],
       available: form.available,
+      featured: form.featured,
     };
 
     const { error: dbError } = editingId
@@ -330,10 +331,16 @@ function CoversTab() {
                 </label>
               </div>
             </Field>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={form.available} onChange={e => setForm(f => ({ ...f, available: e.target.checked }))} className="w-4 h-4 accent-gold" />
-              <span className="font-sans text-sm text-warmgray">Disponible en catálogo</span>
-            </label>
+            <div className="flex flex-col gap-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={form.available} onChange={e => setForm(f => ({ ...f, available: e.target.checked }))} className="w-4 h-4 accent-gold" />
+                <span className="font-sans text-sm text-warmgray">Disponible en catálogo</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={form.featured} onChange={e => setForm(f => ({ ...f, featured: e.target.checked }))} className="w-4 h-4 accent-gold" />
+                <span className="font-sans text-sm text-warmgray">Mostrar en inicio</span>
+              </label>
+            </div>
             {error && <p className="font-sans text-xs text-red-400">{error}</p>}
             <div className="flex gap-3 pt-2">
               <button type="submit" disabled={saving} className="btn-primary gap-2">
@@ -370,6 +377,11 @@ function CoversTab() {
                 {!c.available && (
                   <span className="absolute top-2 right-2 font-sans text-[9px] tracking-widest uppercase bg-warmgray/80 text-white px-2 py-0.5 rounded-full">
                     Oculta
+                  </span>
+                )}
+                {c.featured && (
+                  <span className="absolute top-2 left-2 font-sans text-[9px] tracking-widest uppercase bg-gold/90 text-white px-2 py-0.5 rounded-full">
+                    Inicio
                   </span>
                 )}
               </div>

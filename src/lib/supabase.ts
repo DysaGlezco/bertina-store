@@ -46,6 +46,7 @@ function mapRowToCover(row: any): Cover {
     description: row.description ?? undefined,
     images: row.images ?? [],
     available: row.available ?? true,
+    featured: row.featured ?? false,
   };
 }
 
@@ -57,6 +58,18 @@ export async function getCovers(): Promise<Cover[]> {
     .order("created_at", { ascending: true });
 
   if (error) return coversJson as Cover[];
+  return (data ?? []).map(mapRowToCover);
+}
+
+export async function getFeaturedCovers(): Promise<Cover[]> {
+  const { data, error } = await supabase
+    .from("covers")
+    .select("*")
+    .eq("available", true)
+    .eq("featured", true)
+    .order("created_at", { ascending: true });
+
+  if (error) return (coversJson as Cover[]).filter(c => c.featured);
   return (data ?? []).map(mapRowToCover);
 }
 

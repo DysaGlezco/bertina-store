@@ -15,6 +15,7 @@ export interface Cover {
   description?: string;
   images: string[];
   available: boolean;
+  featured: boolean;
 }
 
 /* ─── V2: Opciones de configuración ────────────────────────────────── */
