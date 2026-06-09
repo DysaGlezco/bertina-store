@@ -62,24 +62,24 @@ export default function Header() {
             <Image src="/logo.svg" alt="Bertina" width={50} height={50} priority />
           </Link>
 
-          {/* Redes sociales — desktop */}
-          <div className="hidden md:flex items-center gap-4 ml-auto mr-4">
-            {SOCIAL_LINKS.map(({ label, href, Icon }) => (
-              <a
-                key={label}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={label}
-                className="text-warmgray hover:text-gold transition-colors duration-200"
-              >
-                <Icon size={16} strokeWidth={1.5} />
-              </a>
-            ))}
-          </div>
+          {/* Derecha: redes (desktop) + carrito + hamburguesa */}
+          <div className="flex items-center gap-4 ml-auto">
+            {/* Redes sociales — solo desktop */}
+            <div className="hidden md:flex items-center gap-4 mr-1">
+              {SOCIAL_LINKS.map(({ label, href, Icon }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="text-warmgray hover:text-gold transition-colors duration-200"
+                >
+                  <Icon size={16} strokeWidth={1.5} />
+                </a>
+              ))}
+            </div>
 
-          {/* Derecha: carrito + hamburguesa */}
-          <div className="flex items-center gap-4">
             {/* Carrito */}
             <button
               onClick={toggleCart}
@@ -123,11 +123,11 @@ export default function Header() {
             className="fixed inset-0 z-40 bg-cream flex flex-col pt-20 px-8 pb-10 md:hidden"
           >
             {/* Links de navegación */}
-            <nav className="flex flex-col gap-6 mt-8">
+            <nav className="flex flex-col items-end gap-6 mt-8">
               {NAV_LINKS.map((l, i) => (
                 <motion.div
                   key={l.href}
-                  initial={{ opacity: 0, x: -16 }}
+                  initial={{ opacity: 0, x: 16 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.05 * i, duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
                 >
