@@ -21,7 +21,7 @@ export default function CoverCard({ cover, index = 0 }: Props) {
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.6, delay: index * 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
     >
-      <Link href={`/configurar/${cover.slug}`} className="block">
+      <Link href={`/configurar?slug=${cover.slug}`} className="block">
         {/* Imagen */}
         <div className="relative overflow-hidden aspect-[4/5] bg-cream-warm">
           <Image

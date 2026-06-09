@@ -1,16 +1,13 @@
-import CoverCard from "@/components/product/CoverCard";
+import CoverGrid from "@/components/product/CoverGrid";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import type { Metadata } from "next";
-import { getCovers } from "@/lib/supabase";
 
 export const metadata: Metadata = {
   title: "Catálogo",
   description: "Elige tu portada y personaliza tu cuaderno. Cuadernos de diseño hechos a mano.",
 };
 
-export default async function CatalogoPage() {
-  const covers = await getCovers();
-
+export default function CatalogoPage() {
   return (
     <main>
       <div className="min-h-screen pt-28 pb-section">
@@ -38,23 +35,8 @@ export default async function CatalogoPage() {
             </p>
           </div>
 
-          {covers.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
-              {covers.map((cover, i) => (
-                <CoverCard
-                  key={cover.id}
-                  cover={cover}
-                  index={i}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-24">
-              <p className="font-serif text-xl italic text-warmgray">
-                Próximamente nuevas portadas.
-              </p>
-            </div>
-          )}
+          <CoverGrid />
+
         </div>
       </div>
     </main>
