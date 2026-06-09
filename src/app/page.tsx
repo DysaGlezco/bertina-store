@@ -6,8 +6,6 @@ import HeroSection from "@/components/layout/HeroSection";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
 import { getCovers, getTestimonials } from "@/lib/supabase";
 
-export const revalidate = 3600;
-
 export default async function HomePage() {
   const [covers, dbTestimonials] = await Promise.all([
     getCovers(),

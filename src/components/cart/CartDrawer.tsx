@@ -9,22 +9,7 @@ import { formatUSD } from "@/lib/pricing";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import type { CartItem, ConfiguredItem, TarjetaCartItem, PegatinaCartItem } from "@/types";
 import { isTarjetaItem, isPegatinaItem } from "@/types";
-
-const LAMINATION_LABEL: Record<string, string> = {
-  brillante: "Brillante",
-  mate: "Mate",
-  holografico: "Holográfico",
-};
-
-const BINDING_LABEL: Record<string, string> = {
-  flejes: "Wire-O",
-  argollas: "Argollas",
-};
-
-const CARAS_LABEL: Record<string, string> = {
-  "una-cara": "Una cara",
-  "dos-caras": "Dos caras",
-};
+import { LAMINATION_LABEL, BINDING_LABEL, CARAS_LABEL, MATERIAL_LABEL, TAMANO_LABEL } from "@/lib/constants";
 
 function CuadernoSummary({ item }: { item: ConfiguredItem }) {
   const { config } = item;
@@ -58,20 +43,12 @@ function TarjetaSummary({ item }: { item: TarjetaCartItem }) {
   );
 }
 
-const MATERIAL_LABEL: Record<string, string> = {
-  "papel-fotografico": "Papel fotográfico",
-  "vinilo": "Vinilo",
-};
-const TAMANO_LABEL: Record<string, string> = {
-  "2x2": "Pequeña 2×2", "3x3": "Mediana 3×3", "4x4": "Grande 4×4",
-};
-
 function PegatinaSummary({ item }: { item: PegatinaCartItem }) {
   return (
     <div className="space-y-0.5">
       <p className="font-sans text-xs text-warmgray">{MATERIAL_LABEL[item.material] ?? item.material}</p>
       <p className="font-sans text-xs text-warmgray">{item.acabado}</p>
-      <p className="font-sans text-xs text-warmgray">{TAMANO_LABEL[item.tamano]} · {item.cantidad} uds.</p>
+      <p className="font-sans text-xs text-warmgray">{TAMANO_LABEL[item.tamano] ?? item.tamano} · {item.cantidad} uds.</p>
     </div>
   );
 }

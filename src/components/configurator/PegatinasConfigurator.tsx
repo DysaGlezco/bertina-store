@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useCart } from "@/lib/cart-context";
 import { formatUSD } from "@/lib/pricing";
 import type { PegatinasConfig, PegatinaMaterial, PegatinaTamano, PegatinaCartItem } from "@/types";
+import { MATERIAL_LABEL } from "@/lib/constants";
 
 interface Props { config: PegatinasConfig; }
 
@@ -101,7 +102,7 @@ export default function PegatinasConfigurator({ config }: Props) {
           </div>
           {selectedAcabado && (
             <p className="font-sans text-xs text-warmgray tracking-widest uppercase text-center mt-4">
-              {material === "papel-fotografico" ? "Papel fotográfico" : "Vinilo"} · {selectedAcabado}
+              {MATERIAL_LABEL[material] ?? material} · {selectedAcabado}
             </p>
           )}
         </div>
@@ -200,7 +201,7 @@ export default function PegatinasConfigurator({ config }: Props) {
             <div className="space-y-1">
               <p className="font-sans text-xs tracking-widest uppercase text-warmgray">Tu pedido</p>
               <p className="font-sans text-sm text-warmgray">
-                {config.cantidad} pegatinas · {material === "papel-fotografico" ? "Papel fotográfico" : "Vinilo"} · {selectedAcabado} · {TAMANO_OPTIONS.find(t => t.id === tamano)?.dims}
+                {config.cantidad} pegatinas · {MATERIAL_LABEL[material] ?? material} · {selectedAcabado} · {TAMANO_OPTIONS.find(t => t.id === tamano)?.dims}
               </p>
             </div>
             <div className="flex items-baseline gap-2">

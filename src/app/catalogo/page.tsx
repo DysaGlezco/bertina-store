@@ -3,8 +3,6 @@ import Breadcrumb from "@/components/ui/Breadcrumb";
 import type { Metadata } from "next";
 import { getCovers } from "@/lib/supabase";
 
-export const revalidate = 3600;
-
 export const metadata: Metadata = {
   title: "Catálogo",
   description: "Elige tu portada y personaliza tu cuaderno. Cuadernos de diseño hechos a mano.",

@@ -1,29 +1,15 @@
 import type { CartItem, ConfiguredItem, TarjetaCartItem, PegatinaCartItem } from "@/types";
 import { isTarjetaItem, isPegatinaItem } from "@/types";
 import { formatUSD } from "@/lib/pricing";
-
-const WHATSAPP_NUMBER = "5358732088";
-
-const LAMINATION_LABEL: Record<string, string> = {
-  brillante: "Brillante",
-  mate: "Mate",
-  holografico: "Holográfico",
-};
-
-const BINDING_LABEL: Record<string, string> = {
-  flejes: "Wire-O",
-  argollas: "Argollas",
-};
-
-const COVER_TYPE_LABEL: Record<string, string> = {
-  semidura: "Semidura",
-  dura: "Dura",
-};
-
-const CARAS_LABEL: Record<string, string> = {
-  "una-cara": "Una cara",
-  "dos-caras": "Dos caras",
-};
+import {
+  WHATSAPP_NUMBER,
+  LAMINATION_LABEL,
+  BINDING_LABEL,
+  COVER_TYPE_LABEL,
+  CARAS_LABEL,
+  MATERIAL_LABEL,
+  TAMANO_LABEL,
+} from "@/lib/constants";
 
 function formatContentType(item: ConfiguredItem): string {
   const { contentType, contentSubtype } = item.config;
@@ -53,17 +39,6 @@ function buildCuadernoSpec(item: ConfiguredItem, i: number): string {
   if (config.notes)         lines.push(`  📝 Nota: ${config.notes}`);
   return lines.join("\n");
 }
-
-const MATERIAL_LABEL: Record<string, string> = {
-  "papel-fotografico": "Papel fotográfico",
-  "vinilo":            "Vinilo",
-};
-
-const TAMANO_LABEL: Record<string, string> = {
-  "2x2": "Pequeña 2×2 cm",
-  "3x3": "Mediana 3×3 cm",
-  "4x4": "Grande 4×4 cm",
-};
 
 function buildPegatinaSpec(item: PegatinaCartItem, i: number): string {
   return [
@@ -121,5 +96,3 @@ export function buildWhatsAppUrl(items: CartItem[], totalUSD: number): string {
   const message = buildWhatsAppMessage(items, totalUSD);
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 }
-
-export { formatUSD as formatCurrency };

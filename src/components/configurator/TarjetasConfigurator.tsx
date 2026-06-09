@@ -2,10 +2,11 @@
 
 import { useState, useMemo } from "react";
 import { ShoppingBag, CreditCard } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
 import { useCart } from "@/lib/cart-context";
 import { formatUSD } from "@/lib/pricing";
 import type { TarjetasConfig, TarjetaCartItem } from "@/types";
+import { CARAS_LABEL } from "@/lib/constants";
 
 interface Props {
   config: TarjetasConfig;
@@ -29,7 +30,7 @@ export default function TarjetasConfigurator({ config }: Props) {
     [config.precios, caras]
   );
 
-  const selectedRow = acabadoRows.find(r => r.acabado === acabado) ?? acabadoRows[0];
+  const selectedRow    = acabadoRows.find(r => r.acabado === acabado) ?? acabadoRows[0];
   const selectedAcabado = selectedRow?.acabado ?? "";
 
   const precio = useMemo(() => {
@@ -61,41 +62,31 @@ export default function TarjetasConfigurator({ config }: Props) {
     <div className="max-w-7xl mx-auto px-6 lg:px-12 pt-28 pb-24">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
 
-        {/* Columna izquierda — imagen de referencia */}
+        {/* Columna izquierda — imagen de referencia única */}
         <div className="lg:sticky lg:top-28 lg:self-start">
           <div className="relative aspect-[3/4] rounded-sm overflow-hidden bg-cream-warm">
-            <AnimatePresence mode="wait">
-              {selectedRow?.imagen ? (
-                <motion.img
-                  key={selectedRow.imagen}
-                  src={selectedRow.imagen}
-                  alt={selectedAcabado}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-              ) : (
-                <motion.div
-                  key="placeholder"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.35 }}
-                  className="absolute inset-0 flex flex-col items-center justify-center gap-3"
-                >
-                  <CreditCard size={48} strokeWidth={0.8} className="text-warmgray/30" />
-                  <p className="font-sans text-xs text-warmgray/40 tracking-widest uppercase">
-                    Imagen de referencia
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {config.imagen ? (
+              <Image
+                src={config.imagen}
+                alt="Tarjetas de presentación"
+                fill
+                unoptimized
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                priority
+              />
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                <CreditCard size={48} strokeWidth={0.8} className="text-warmgray/30" />
+                <p className="font-sans text-xs text-warmgray/40 tracking-widest uppercase">
+                  Imagen de referencia
+                </p>
+              </div>
+            )}
           </div>
           {selectedAcabado && (
             <p className="font-sans text-xs text-warmgray tracking-widest uppercase text-center mt-4">
-              {caras === "una-cara" ? "Una cara" : "Dos caras"} · {selectedAcabado}
+              {CARAS_LABEL[caras]} · {selectedAcabado}
             </p>
           )}
         </div>
@@ -189,7 +180,7 @@ export default function TarjetasConfigurator({ config }: Props) {
             <div className="space-y-1">
               <p className="font-sans text-xs tracking-widest uppercase text-warmgray">Tu pedido</p>
               <p className="font-sans text-sm text-warmgray">
-                {cantidad} tarjetas · {caras === "una-cara" ? "Una cara" : "Dos caras"} · {selectedAcabado}
+                {cantidad} tarjetas · {CARAS_LABEL[caras]} · {selectedAcabado}
               </p>
             </div>
             <div className="flex items-baseline gap-2">

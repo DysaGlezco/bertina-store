@@ -7,7 +7,9 @@ import pricingFallback from "@/data/pricing.json";
 import contentTypesFallback from "@/data/content-types.json";
 import tarjetasFallback from "@/data/tarjetas-config.json";
 import pegatinaseFallback from "@/data/pegatinas-config.json";
-import type { ContentTypeConfig, PricingRow, TarjetaPricingRow, PegatinaPricingRow } from "@/types";
+import type { Cover, ContentTypeConfig, PricingRow, TarjetaPricingRow, PegatinaPricingRow } from "@/types";
+import { BINDING_LABEL, COVER_TYPE_LABEL, CARAS_LABEL, MATERIAL_LABEL } from "@/lib/constants";
+import { slugify } from "@/lib/utils";
 
 interface TestimonialRow {
   id: number;
@@ -149,11 +151,10 @@ export default function AdminPage() {
 /* ══════════════════════════════════════════════════════════════════════ */
 /*  TAB: PORTADAS                                                          */
 /* ══════════════════════════════════════════════════════════════════════ */
-interface CoverRow { id: string; slug: string; name: string; description: string | null; images: string[]; available: boolean; }
 const EMPTY_COVER = { name: "", slug: "", description: "", available: true };
 
 function CoversTab() {
-  const [covers, setCovers]             = useState<CoverRow[]>([]);
+  const [covers, setCovers]             = useState<Cover[]>([]);
   const [loading, setLoading]           = useState(false);
   const [showForm, setShowForm]         = useState(false);
   const [editingId, setEditingId]       = useState<string | null>(null);
@@ -169,7 +170,7 @@ function CoversTab() {
       .from("covers")
       .select("*")
       .order("created_at", { ascending: true });
-    if (data) setCovers(data as CoverRow[]);
+    if (data) setCovers(data as Cover[]);
     setLoading(false);
   }, []);
 
@@ -197,7 +198,7 @@ function CoversTab() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function openEdit(c: CoverRow) {
+  function openEdit(c: Cover) {
     setEditingId(c.id);
     setForm({ name: c.name, slug: c.slug, description: c.description ?? "", available: c.available });
     revokePreview(imagePreview);
@@ -224,17 +225,13 @@ function CoversTab() {
     let finalImageUrl = imagePreview.startsWith("blob:") ? "" : imagePreview;
 
     if (imageFile) {
-      const ext = imageFile.name.split(".").pop()?.toLowerCase() ?? "jpg";
-      const fileName = `${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from("covers")
-        .upload(fileName, imageFile, { cacheControl: "3600", upsert: false });
-      if (uploadError) {
-        setError(uploadError.message);
+      const url = await uploadImage(imageFile);
+      if (!url) {
+        setError("Error al subir la imagen. Intenta de nuevo.");
         setSaving(false);
         return;
       }
-      finalImageUrl = supabase.storage.from("covers").getPublicUrl(fileName).data.publicUrl;
+      finalImageUrl = url;
     }
 
     const payload = {
@@ -557,9 +554,6 @@ function TestimonialsTab() {
 }
 
 /* ─── Tab: Precios ──────────────────────────────────────────────────── */
-const TIPO_LABEL: Record<string, string>    = { semidura: "Semidura", dura: "Dura" };
-const BINDING_LABEL: Record<string, string> = { flejes: "Wire-O", argollas: "Argollas" };
-const CARAS_LABEL: Record<string, string>   = { "una-cara": "Una cara", "dos-caras": "Dos caras" };
 
 function PricingTab() {
   const [product, setProduct] = useState<"cuadernos" | "tarjetas" | "pegatinas">("cuadernos");
@@ -653,7 +647,7 @@ function CuadernosPricingTable() {
               <tr key={`${row.tipo}-${row.hojas}-${row.encuadernado}`}>
                 <td className="py-3 pr-4">
                   <span className={`font-sans text-xs px-2.5 py-1 rounded-full ${row.tipo === "semidura" ? "bg-sage/10 text-sage" : "bg-cream-deep text-warmgray"}`}>
-                    {TIPO_LABEL[row.tipo] ?? row.tipo}
+                    {COVER_TYPE_LABEL[row.tipo] ?? row.tipo}
                   </span>
                 </td>
                 <td className="py-3 pr-4"><span className="font-sans text-sm font-medium text-ink">{row.hojas}</span></td>
@@ -691,26 +685,28 @@ function CuadernosPricingTable() {
 async function uploadImage(file: File): Promise<string | null> {
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
   const fileName = `${Date.now()}.${ext}`;
-  const { error } = await supabase.storage.from("covers").upload(fileName, file, { upsert: false });
+  const { error } = await supabase.storage.from("covers").upload(fileName, file, { cacheControl: "3600", upsert: false });
   if (error) return null;
   return supabase.storage.from("covers").getPublicUrl(fileName).data.publicUrl;
 }
 
 function TarjetasPricingTable() {
-  const [rows, setRows]         = useState<TarjetaPricingRow[]>([]);
-  const [loading, setLoading]   = useState(true);
-  const [status, setStatus]     = useState<"idle" | "saving" | "ok" | "error">("idle");
-  const [errorMsg, setErrorMsg] = useState("");
+  const [rows, setRows]           = useState<TarjetaPricingRow[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [status, setStatus]       = useState<"idle" | "saving" | "ok" | "error">("idle");
+  const [errorMsg, setErrorMsg]   = useState("");
   const [cantidades, setCantidades] = useState<number[]>([]);
-  const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
+  const [imagen, setImagen]       = useState<string>("");
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
-        const { data } = await supabase.from("tarjetas_config").select("precios, cantidades").eq("id", 1).single();
+        const { data } = await supabase.from("tarjetas_config").select("precios, cantidades, imagen").eq("id", 1).single();
         if (Array.isArray(data?.precios) && data.precios.length > 0) {
           setRows(data.precios);
           setCantidades(data.cantidades ?? [100, 200, 500, 1000]);
+          setImagen(data.imagen ?? "");
         } else {
           setRows((tarjetasFallback as { precios: TarjetaPricingRow[] }).precios);
           setCantidades((tarjetasFallback as { cantidades: number[] }).cantidades);
@@ -729,22 +725,18 @@ function TarjetasPricingTable() {
     setRows(prev => prev.map((r, i) => i === idx ? { ...r, precio100: isNaN(num) ? 0 : num } : r));
   }
 
-  async function handleImageUpload(idx: number, file: File) {
-    setUploadingIdx(idx);
+  async function handleImageUpload(file: File) {
+    setUploading(true);
     const url = await uploadImage(file);
-    if (url) setRows(prev => prev.map((r, i) => i === idx ? { ...r, imagen: url } : r));
-    setUploadingIdx(null);
-  }
-
-  function handleRemoveImage(idx: number) {
-    setRows(prev => prev.map((r, i) => i === idx ? { ...r, imagen: undefined } : r));
+    if (url) setImagen(url);
+    setUploading(false);
   }
 
   async function handleSave() {
     setStatus("saving");
     setErrorMsg("");
     const { error } = await supabase.from("tarjetas_config").upsert({
-      id: 1, precios: rows, cantidades, updated_at: new Date().toISOString(),
+      id: 1, precios: rows, cantidades, imagen: imagen || null, updated_at: new Date().toISOString(),
     });
     if (error) { setStatus("error"); setErrorMsg(error.message); }
     else { setStatus("ok"); setTimeout(() => setStatus("idle"), 3000); }
@@ -761,6 +753,45 @@ function TarjetasPricingTable() {
       <p className="font-sans text-sm text-warmgray">
         Precio por cada 100 tarjetas. El configurador calcula el total según la cantidad elegida.
       </p>
+
+      {/* Imagen de referencia única */}
+      <div className="flex items-start gap-5 p-5 bg-cream-warm border border-cream-deep rounded-xl">
+        <div>
+          <p className="font-sans text-xs tracking-widest uppercase text-warmgray mb-3">Imagen de referencia</p>
+          <div className="flex items-start gap-4">
+            {imagen ? (
+              <div className="relative w-28 shrink-0">
+                <div className="aspect-[3/4] rounded-xl overflow-hidden bg-cream-deep">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={imagen} alt="Imagen de referencia tarjetas" className="w-full h-full object-cover" />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setImagen("")}
+                  className="absolute -top-1.5 -right-1.5 bg-white border border-cream-deep rounded-full p-0.5 text-warmgray hover:text-red-400 transition-colors shadow-sm"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            ) : null}
+            <label className={`flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors border-2 border-dashed border-cream-deep hover:border-gold bg-white rounded-xl ${imagen ? "w-20 aspect-square" : "w-28 aspect-[3/4]"}`}>
+              {uploading
+                ? <div className="w-5 h-5 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+                : <><Upload size={imagen ? 16 : 20} strokeWidth={1.5} className="text-warmgray" />
+                   <span className="font-sans text-[10px] text-warmgray text-center leading-tight px-1">
+                     {imagen ? "Cambiar" : "Subir imagen"}
+                   </span></>
+              }
+              <input type="file" accept="image/*" className="sr-only"
+                onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }}
+                disabled={uploading}
+              />
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabla de precios */}
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
@@ -768,7 +799,6 @@ function TarjetasPricingTable() {
               <th className="pb-3 text-left font-sans text-[10px] tracking-widest uppercase text-warmgray pr-4 whitespace-nowrap">Caras</th>
               <th className="pb-3 text-left font-sans text-[10px] tracking-widest uppercase text-warmgray pr-6">Acabado</th>
               <th className="pb-3 text-center font-sans text-[10px] tracking-widest uppercase text-warmgray px-3 whitespace-nowrap">Precio / 100 und.</th>
-              <th className="pb-3 text-center font-sans text-[10px] tracking-widest uppercase text-warmgray whitespace-nowrap">Imagen ref.</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-cream-deep/60">
@@ -790,32 +820,6 @@ function TarjetasPricingTable() {
                     />
                   </div>
                 </td>
-                <td className="py-3 pl-3">
-                  <div className="flex items-center justify-center gap-2">
-                    {row.imagen ? (
-                      <>
-                        <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-cream-warm flex-shrink-0">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={row.imagen} alt={row.acabado} className="w-full h-full object-cover" />
-                        </div>
-                        <button type="button" onClick={() => handleRemoveImage(idx)} className="text-warmgray/40 hover:text-red-400 transition-colors" title="Quitar imagen">
-                          <X size={13} />
-                        </button>
-                      </>
-                    ) : (
-                      <label className="cursor-pointer flex items-center gap-1 font-sans text-xs text-gold hover:text-gold/70 transition-colors">
-                        {uploadingIdx === idx
-                          ? <div className="w-4 h-4 border border-gold border-t-transparent rounded-full animate-spin" />
-                          : <><Upload size={13} /> Subir</>
-                        }
-                        <input type="file" accept="image/*" className="sr-only"
-                          onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(idx, f); }}
-                          disabled={uploadingIdx !== null}
-                        />
-                      </label>
-                    )}
-                  </div>
-                </td>
               </tr>
             ))}
           </tbody>
@@ -834,10 +838,6 @@ function TarjetasPricingTable() {
 }
 
 /* ─── Subtabla: Pegatinas ────────────────────────────────────────────── */
-const MATERIAL_LABEL_ADM: Record<string, string> = {
-  "papel-fotografico": "Papel fotográfico",
-  "vinilo": "Vinilo",
-};
 
 function PegatinasPricingTable() {
   const [rows, setRows]         = useState<PegatinaPricingRow[]>([]);
@@ -916,7 +916,7 @@ function PegatinasPricingTable() {
               <tr key={`${row.material}-${row.acabado}`}>
                 <td className="py-3 pr-4">
                   <span className={`font-sans text-xs px-2.5 py-1 rounded-full ${row.material === "papel-fotografico" ? "bg-sage/10 text-sage" : "bg-cream-deep text-warmgray"}`}>
-                    {MATERIAL_LABEL_ADM[row.material] ?? row.material}
+                    {MATERIAL_LABEL[row.material] ?? row.material}
                   </span>
                 </td>
                 <td className="py-3 pr-4"><span className="font-sans text-sm text-ink">{row.acabado}</span></td>
@@ -1147,13 +1147,6 @@ function ContentTypesTab() {
 }
 
 /* ─── Helpers compartidos ──────────────────────────────────────────── */
-function slugify(text: string) {
-  return text.toLowerCase()
-    .normalize("NFD").replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9\s-]/g, "")
-    .trim().replace(/\s+/g, "-");
-}
-
 const input = "w-full px-4 py-2.5 rounded-xl border border-cream-deep bg-cream font-sans text-sm text-ink placeholder:text-warmgray-light focus:outline-none focus:border-gold transition-colors";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {

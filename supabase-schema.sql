@@ -127,8 +127,10 @@ CREATE TABLE IF NOT EXISTS tarjetas_config (
   id         int         PRIMARY KEY DEFAULT 1,
   precios    jsonb       NOT NULL DEFAULT '[]',
   cantidades jsonb       NOT NULL DEFAULT '[100, 200, 500, 1000]',
+  imagen     text,
   updated_at timestamptz DEFAULT now()
 );
+ALTER TABLE tarjetas_config ADD COLUMN IF NOT EXISTS imagen text;
 
 ALTER TABLE tarjetas_config ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "tarjetas_public_read" ON tarjetas_config;

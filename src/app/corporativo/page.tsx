@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import Breadcrumb from "@/components/ui/Breadcrumb";
+import { WHATSAPP_NUMBER } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Corporativo",
@@ -14,7 +15,6 @@ const products = [
     desc: "Personalizados con portada, laminado, tipo de contenido y encuadernado a elección. Perfectos para regalar o usar en tu empresa.",
     cta: "Explorar",
     href: "/catalogo",
-    whatsapp: false,
   },
   {
     icon: "◈",
@@ -22,7 +22,6 @@ const products = [
     desc: "Una cara o dos caras, con acabados brillante, mate, holográfico, hilo o foil. Precio en tiempo real según la cantidad.",
     cta: "Configurar",
     href: "/corporativo/tarjetas",
-    whatsapp: false,
   },
   {
     icon: "◉",
@@ -30,7 +29,6 @@ const products = [
     desc: "Vinilo, papel o transparente para etiquetar tus productos y paquetes. Contáctanos para una cotización personalizada.",
     cta: "Configurar",
     href: "/corporativo/pegatinas",
-    whatsapp: false,
   },
 ];
 
@@ -80,20 +78,9 @@ export default function CorporativoPage() {
                 <span className="text-gold text-xl">{p.icon}</span>
                 <h3 className="font-serif text-xl font-medium text-ink">{p.title}</h3>
                 <p className="font-sans text-sm text-warmgray leading-relaxed flex-1">{p.desc}</p>
-                {p.whatsapp ? (
-                  <a
-                    href={p.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-primary text-center text-sm"
-                  >
-                    {p.cta}
-                  </a>
-                ) : (
-                  <Link href={p.href} className="btn-primary text-center text-sm">
-                    {p.cta}
-                  </Link>
-                )}
+                <Link href={p.href} className="btn-primary text-center text-sm">
+                  {p.cta}
+                </Link>
               </div>
             ))}
           </div>
@@ -128,7 +115,7 @@ export default function CorporativoPage() {
             ¿Tienes un proyecto especial o necesitas una cotización a medida? Escríbenos directamente.
           </p>
           <a
-            href="https://wa.me/5358732088?text=Hola%2C%20me%20interesa%20papeler%C3%ADa%20corporativa%20para%20mi%20empresa."
+            href={`https://wa.me/${WHATSAPP_NUMBER}?text=Hola%2C%20me%20interesa%20papeler%C3%ADa%20corporativa%20para%20mi%20empresa.`}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-primary inline-flex"

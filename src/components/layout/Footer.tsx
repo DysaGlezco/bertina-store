@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Instagram, Facebook } from "lucide-react";
+import { WHATSAPP_NUMBER } from "@/lib/constants";
 
 export default function Footer() {
   return (
@@ -49,7 +50,7 @@ export default function Footer() {
             ¿Tienes preguntas? Escríbenos directamente por WhatsApp.
           </p>
           <a
-            href="https://wa.me/5358732088"
+            href={`https://wa.me/${WHATSAPP_NUMBER}`}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-ghost text-xs"

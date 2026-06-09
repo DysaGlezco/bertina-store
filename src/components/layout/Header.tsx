@@ -6,6 +6,7 @@ import { ShoppingBag, Menu, X, Instagram, Facebook } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import { WHATSAPP_NUMBER } from "@/lib/constants";
 
 const NAV_LINKS = [
   { label: "Catálogo", href: "/catalogo" },
@@ -163,7 +164,7 @@ export default function Header() {
             {/* WhatsApp CTA */}
             <div className="mt-auto">
               <a
-                href="https://wa.me/5358732088"
+                href={`https://wa.me/${WHATSAPP_NUMBER}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-primary w-full justify-center"

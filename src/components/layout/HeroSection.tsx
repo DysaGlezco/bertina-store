@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import { WHATSAPP_NUMBER } from "@/lib/constants";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -70,7 +71,7 @@ export default function HeroSection() {
               Explorar catálogo
             </Link>
             <a
-              href="https://wa.me/5358732088"
+              href={`https://wa.me/${WHATSAPP_NUMBER}`}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-ghost"
