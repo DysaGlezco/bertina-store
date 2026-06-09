@@ -192,6 +192,11 @@ export default function ConfiguratorClient({
               Configura tu cuaderno
             </p>
             <h1 className="font-serif text-display-md text-ink">{cover.name}</h1>
+            {cover.description && (
+              <p className="font-sans text-sm text-warmgray/70 mt-2 leading-relaxed">
+                {cover.description}
+              </p>
+            )}
             <div className="w-10 h-px bg-gold mt-4" />
           </div>
 
