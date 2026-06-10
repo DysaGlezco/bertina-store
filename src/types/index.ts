@@ -127,12 +127,12 @@ export interface PegatinaPricingRow {
   precio2x2: number;
   precio3x3: number;
   precio4x4: number;
-  imagen?: string;
 }
 
 export interface PegatinasConfig {
   precios:   PegatinaPricingRow[];
   cantidad:  number; // fijo: 50
+  imagen?:   string; // imagen de referencia única para todas las pegatinas
   updatedAt: string;
 }
 

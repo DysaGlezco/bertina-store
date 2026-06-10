@@ -135,10 +135,15 @@ export async function getTarjetasConfig(): Promise<TarjetasConfig> {
 export async function getPegatinasConfig(): Promise<PegatinasConfig> {
   const { data, error } = await supabase
     .from("pegatinas_config")
-    .select("precios, cantidad, updated_at")
+    .select("precios, cantidad, imagen, updated_at")
     .eq("id", 1)
     .single();
 
   if (error || !data) return pegatinasJson as PegatinasConfig;
-  return { precios: data.precios, cantidad: data.cantidad, updatedAt: data.updated_at };
+  return {
+    precios: data.precios,
+    cantidad: data.cantidad,
+    imagen: data.imagen ?? undefined,
+    updatedAt: data.updated_at,
+  };
 }

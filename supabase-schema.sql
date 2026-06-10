@@ -150,6 +150,8 @@ CREATE TABLE IF NOT EXISTS pegatinas_config (
   updated_at timestamptz DEFAULT now()
 );
 
+ALTER TABLE pegatinas_config ADD COLUMN IF NOT EXISTS imagen text;
+
 ALTER TABLE pegatinas_config ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "pegatinas_public_read" ON pegatinas_config;
 DROP POLICY IF EXISTS "pegatinas_admin_write" ON pegatinas_config;

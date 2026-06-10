@@ -852,20 +852,22 @@ function TarjetasPricingTable() {
 /* ─── Subtabla: Pegatinas ────────────────────────────────────────────── */
 
 function PegatinasPricingTable() {
-  const [rows, setRows]         = useState<PegatinaPricingRow[]>([]);
-  const [loading, setLoading]   = useState(true);
-  const [status, setStatus]     = useState<"idle" | "saving" | "ok" | "error">("idle");
-  const [errorMsg, setErrorMsg] = useState("");
-  const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
+  const [rows, setRows]           = useState<PegatinaPricingRow[]>([]);
+  const [imagen, setImagen]       = useState<string>("");
+  const [uploading, setUploading] = useState(false);
+  const [loading, setLoading]     = useState(true);
+  const [status, setStatus]       = useState<"idle" | "saving" | "ok" | "error">("idle");
+  const [errorMsg, setErrorMsg]   = useState("");
 
   useEffect(() => {
     (async () => {
       try {
-        const { data } = await supabase.from("pegatinas_config").select("precios, cantidad").eq("id", 1).single();
+        const { data } = await supabase.from("pegatinas_config").select("precios, cantidad, imagen").eq("id", 1).single();
         if (Array.isArray(data?.precios) && data.precios.length > 0)
           setRows(data.precios);
         else
           setRows((pegatinaseFallback as { precios: PegatinaPricingRow[] }).precios);
+        setImagen(data?.imagen ?? "");
       } catch {
         setRows((pegatinaseFallback as { precios: PegatinaPricingRow[] }).precios);
       } finally {
@@ -879,22 +881,18 @@ function PegatinasPricingTable() {
     setRows(prev => prev.map((r, i) => i === idx ? { ...r, [field]: isNaN(num) ? 0 : num } : r));
   }
 
-  async function handleImageUpload(idx: number, file: File) {
-    setUploadingIdx(idx);
+  async function handleImageUpload(file: File) {
+    setUploading(true);
     const url = await uploadImage(file);
-    if (url) setRows(prev => prev.map((r, i) => i === idx ? { ...r, imagen: url } : r));
-    setUploadingIdx(null);
-  }
-
-  function handleRemoveImage(idx: number) {
-    setRows(prev => prev.map((r, i) => i === idx ? { ...r, imagen: undefined } : r));
+    if (url) setImagen(url);
+    setUploading(false);
   }
 
   async function handleSave() {
     setStatus("saving");
     setErrorMsg("");
     const { error } = await supabase.from("pegatinas_config").upsert({
-      id: 1, precios: rows, cantidad: 50, updated_at: new Date().toISOString(),
+      id: 1, precios: rows, cantidad: 50, imagen: imagen || null, updated_at: new Date().toISOString(),
     });
     if (error) { setStatus("error"); setErrorMsg(error.message); }
     else { setStatus("ok"); setTimeout(() => setStatus("idle"), 3000); }
@@ -911,6 +909,44 @@ function PegatinasPricingTable() {
       <p className="font-sans text-sm text-warmgray">
         Precio por 50 unidades según material, acabado y tamaño.
       </p>
+
+      {/* Imagen de referencia única */}
+      <div className="flex items-start gap-5 p-5 border border-cream-deep rounded-xl bg-cream-warm/30">
+        <div className="shrink-0">
+          <p className="font-sans text-xs tracking-widest uppercase text-warmgray mb-3">Imagen de referencia</p>
+          <div className="flex items-start gap-4">
+            {imagen && (
+              <div className="relative w-28 shrink-0">
+                <div className="aspect-[3/4] rounded-xl overflow-hidden bg-cream-warm">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={imagen} alt="Imagen de referencia pegatinas" className="w-full h-full object-cover" />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setImagen("")}
+                  className="absolute -top-1.5 -right-1.5 bg-white border border-cream-deep rounded-full p-0.5 text-warmgray hover:text-red-400 transition-colors shadow-sm"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            )}
+            <label className={`flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors border-2 border-dashed border-cream-deep hover:border-gold bg-white rounded-xl ${imagen ? "w-20 aspect-square" : "w-28 aspect-[3/4]"}`}>
+              {uploading
+                ? <div className="w-5 h-5 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+                : <><Upload size={imagen ? 16 : 20} strokeWidth={1.5} className="text-warmgray" />
+                   <span className="font-sans text-[10px] text-warmgray text-center leading-tight px-1">
+                     {imagen ? "Cambiar" : "Subir imagen"}
+                   </span></>
+              }
+              <input type="file" accept="image/*" className="sr-only"
+                onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }}
+                disabled={uploading}
+              />
+            </label>
+          </div>
+        </div>
+      </div>
+
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
@@ -920,7 +956,6 @@ function PegatinasPricingTable() {
               <th className="pb-3 text-center font-sans text-[10px] tracking-widest uppercase text-warmgray px-3">2×2</th>
               <th className="pb-3 text-center font-sans text-[10px] tracking-widest uppercase text-warmgray px-3">3×3</th>
               <th className="pb-3 text-center font-sans text-[10px] tracking-widest uppercase text-warmgray px-3">4×4</th>
-              <th className="pb-3 text-center font-sans text-[10px] tracking-widest uppercase text-warmgray">Imagen</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-cream-deep/60">
@@ -944,32 +979,6 @@ function PegatinasPricingTable() {
                     </div>
                   </td>
                 ))}
-                <td className="py-3 pl-3">
-                  <div className="flex items-center justify-center gap-2">
-                    {row.imagen ? (
-                      <>
-                        <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-cream-warm flex-shrink-0">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={row.imagen} alt={row.acabado} className="w-full h-full object-cover" />
-                        </div>
-                        <button type="button" onClick={() => handleRemoveImage(idx)} className="text-warmgray/40 hover:text-red-400 transition-colors">
-                          <X size={13} />
-                        </button>
-                      </>
-                    ) : (
-                      <label className="cursor-pointer flex items-center gap-1 font-sans text-xs text-gold hover:text-gold/70 transition-colors">
-                        {uploadingIdx === idx
-                          ? <div className="w-4 h-4 border border-gold border-t-transparent rounded-full animate-spin" />
-                          : <><Upload size={13} /> Subir</>
-                        }
-                        <input type="file" accept="image/*" className="sr-only"
-                          onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(idx, f); }}
-                          disabled={uploadingIdx !== null}
-                        />
-                      </label>
-                    )}
-                  </div>
-                </td>
               </tr>
             ))}
           </tbody>
