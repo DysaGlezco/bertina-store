@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import Image from "next/image";
 import { ShoppingBag, ChevronDown } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
@@ -204,14 +205,14 @@ export default function ConfiguratorClient({
           <div>
             <div className="flex items-center justify-between mb-4">
               <SectionTitle number="01" label="Tipo de contenido" />
-              <a
+              <Link
                 href="/guia"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-sans text-xs text-gold border-b border-gold/40 pb-px hover:border-gold transition-colors duration-200 whitespace-nowrap shrink-0"
               >
                 ¿No sabes cuál? Ver guía →
-              </a>
+              </Link>
             </div>
             <div className="space-y-4">
 
