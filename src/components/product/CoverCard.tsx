@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default function CoverCard({ cover, index = 0 }: Props) {
-  const image = cover.images[0] ?? "/images/covers/placeholder.jpg";
+  const image = cover.images[0] ?? "/images/covers/placeholder.webp";
 
   return (
     <motion.div

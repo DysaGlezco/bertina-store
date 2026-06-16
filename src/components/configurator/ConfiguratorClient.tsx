@@ -159,7 +159,7 @@ export default function ConfiguratorClient({
     setTimeout(() => { setAdded(false); toggleCart(); }, 600);
   }
 
-  const image = cover.images[0] ?? "/images/covers/placeholder.jpg";
+  const image = cover.images[0] ?? "/images/covers/placeholder.webp";
   const bindingLabel = effectiveBinding === "flejes" ? "Wire-O" : "Argollas";
   const coverTypeLabel = getCoverTypeFromHojas(effectiveHojas) === "semidura" ? "Semidura" : "Dura";
 

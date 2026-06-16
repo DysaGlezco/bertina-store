@@ -59,7 +59,7 @@ export const metadata: Metadata = {
       "Cuadernos, agendas y papelería de diseño artesanal. Piezas únicas para quienes aman escribir con estilo.",
     images: [
       {
-        url: "/hero.png",
+        url: "/hero.webp",
         width: 600,
         height: 750,
         alt: "Bertina Store — Papelería de diseño",
@@ -70,7 +70,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Bertina Store — Papelería de diseño",
     description: "Cuadernos y papelería artesanal para quienes aman escribir con estilo.",
-    images: ["/hero.png"],
+    images: ["/hero.webp"],
   },
   icons: {
     icon: "/logo.svg",

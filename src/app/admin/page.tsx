@@ -327,7 +327,7 @@ function CoversTab() {
                   <span className="font-sans text-[10px] text-warmgray text-center leading-tight px-1">
                     {imagePreview ? "Cambiar" : "Seleccionar imagen"}
                   </span>
-                  <input type="file" accept="image/*" className="sr-only" onChange={handleFileChange} />
+                  <input type="file" accept="image/webp" className="sr-only" onChange={handleFileChange} />
                 </label>
               </div>
             </Field>
@@ -794,7 +794,7 @@ function TarjetasPricingTable() {
                      {imagen ? "Cambiar" : "Subir imagen"}
                    </span></>
               }
-              <input type="file" accept="image/*" className="sr-only"
+              <input type="file" accept="image/webp" className="sr-only"
                 onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }}
                 disabled={uploading}
               />
@@ -938,7 +938,7 @@ function PegatinasPricingTable() {
                      {imagen ? "Cambiar" : "Subir imagen"}
                    </span></>
               }
-              <input type="file" accept="image/*" className="sr-only"
+              <input type="file" accept="image/webp" className="sr-only"
                 onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }}
                 disabled={uploading}
               />

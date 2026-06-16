@@ -71,7 +71,7 @@ function CartItemRow({ item, index }: { item: CartItem; index: number }) {
         {isTarjeta  ? <CreditCard size={28} strokeWidth={1} className="text-warmgray/40" /> :
          isPegatina ? <Tag        size={28} strokeWidth={1} className="text-warmgray/40" /> : (
           <Image
-            src={(item as ConfiguredItem).config.cover.images[0] ?? "/images/covers/placeholder.jpg"}
+            src={(item as ConfiguredItem).config.cover.images[0] ?? "/images/covers/placeholder.webp"}
             alt={(item as ConfiguredItem).config.cover.name}
             width={80} height={96} unoptimized
             className="w-full h-full object-cover"

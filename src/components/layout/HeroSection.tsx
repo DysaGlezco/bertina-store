@@ -90,7 +90,7 @@ export default function HeroSection() {
         >
           <div className="aspect-[4/5] rounded-3xl overflow-hidden bg-cream-deep">
             <Image
-              src="/hero.png"
+              src="/hero.webp"
               alt="Mujer escribiendo en cuaderno Bertina"
               width={600}
               height={750}

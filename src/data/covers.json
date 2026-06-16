@@ -4,7 +4,7 @@
     "slug": "portada-ejemplo",
     "name": "Ejemplo",
     "description": "Portada de ejemplo.",
-    "images": ["/images/covers/placeholder.jpg"],
+    "images": ["/images/covers/placeholder.webp"],
     "available": true
   }
 ]
