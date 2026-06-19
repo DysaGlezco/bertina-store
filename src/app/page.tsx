@@ -4,10 +4,13 @@ import type { Testimonial } from "@/types";
 import HeroSection from "@/components/layout/HeroSection";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
 import FeaturedCovers from "@/components/home/FeaturedCovers";
-import { getTestimonials } from "@/lib/supabase";
+import { getTestimonials, getFeaturedCovers } from "@/lib/supabase";
 
 export default async function HomePage() {
-  const dbTestimonials = await getTestimonials();
+  const [dbTestimonials, featured] = await Promise.all([
+    getTestimonials(),
+    getFeaturedCovers(),
+  ]);
 
   const testimonials: Testimonial[] =
     dbTestimonials.length > 0 ? dbTestimonials : (testimonialsData as Testimonial[]);
@@ -28,7 +31,7 @@ export default async function HomePage() {
           <div className="w-12 h-px bg-sage mx-auto mt-4" />
         </div>
 
-        <FeaturedCovers />
+        <FeaturedCovers covers={featured} />
 
         <div className="text-center mt-14">
           <Link href="/catalogo" className="btn-outline">

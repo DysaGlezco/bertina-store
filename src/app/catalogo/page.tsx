@@ -1,13 +1,15 @@
 import CoverGrid from "@/components/product/CoverGrid";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import type { Metadata } from "next";
+import { getCovers } from "@/lib/supabase";
 
 export const metadata: Metadata = {
   title: "Catálogo",
   description: "Elige tu portada y personaliza tu cuaderno. Cuadernos de diseño hechos a mano.",
 };
 
-export default function CatalogoPage() {
+export default async function CatalogoPage() {
+  const covers = await getCovers();
   return (
     <main>
       <div className="min-h-screen pt-28 pb-section">
@@ -35,7 +37,7 @@ export default function CatalogoPage() {
             </p>
           </div>
 
-          <CoverGrid />
+          <CoverGrid covers={covers} />
 
         </div>
       </div>

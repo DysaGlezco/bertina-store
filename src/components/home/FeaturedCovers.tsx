@@ -1,19 +1,7 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { getFeaturedCovers } from "@/lib/supabase";
 import type { Cover } from "@/types";
 import CoverCard from "@/components/product/CoverCard";
 
-export default function FeaturedCovers() {
-  const [covers, setCovers] = useState<Cover[] | null>(null);
-
-  useEffect(() => {
-    getFeaturedCovers().then(setCovers);
-  }, []);
-
-  if (covers === null) return null;
-
+export default function FeaturedCovers({ covers }: { covers: Cover[] }) {
   if (covers.length === 0) {
     return (
       <p className="text-center font-serif text-lg italic text-warmgray py-12">

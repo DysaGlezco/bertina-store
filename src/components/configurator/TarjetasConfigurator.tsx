@@ -1,28 +1,22 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { ShoppingBag, CreditCard } from "lucide-react";
 import Image from "next/image";
 import { useCart } from "@/lib/cart-context";
 import { formatUSD } from "@/lib/pricing";
-import { getTarjetasConfig } from "@/lib/supabase";
 import type { TarjetasConfig, TarjetaCartItem } from "@/types";
 import { CARAS_LABEL } from "@/lib/constants";
-import tarjetasFallback from "@/data/tarjetas-config.json";
+
+interface Props { config: TarjetasConfig; }
 
 const CARAS_OPTIONS = [
   { id: "una-cara"  as const, label: "Una cara",  desc: "Impresión en un solo lado" },
   { id: "dos-caras" as const, label: "Dos caras", desc: "Impresión en ambos lados" },
 ];
 
-export default function TarjetasConfigurator() {
+export default function TarjetasConfigurator({ config }: Props) {
   const { addItem } = useCart();
-
-  const [config, setConfig] = useState<TarjetasConfig>(tarjetasFallback as TarjetasConfig);
-
-  useEffect(() => {
-    getTarjetasConfig().then(setConfig);
-  }, []);
 
   const [caras,    setCaras]    = useState<"una-cara" | "dos-caras">("una-cara");
   const [acabado,  setAcabado]  = useState<string>("");
